@@ -1,0 +1,383 @@
+.delivery-page {
+  --delivery-accent: #267c51;
+  padding-block: 12px 40px;
+}
+.delivery-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin: 24px 0 32px;
+}
+.delivery-heading h1 {
+  margin: 10px 0;
+  font-size: clamp(30px, 4vw, 44px);
+  letter-spacing: -1px;
+}
+.delivery-heading p {
+  margin-bottom: 0;
+}
+.delivery-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.55fr);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+.delivery-hero-copy {
+  padding: 36px;
+}
+.delivery-mode {
+  display: inline-block;
+  border-radius: 30px;
+  padding: 7px 11px;
+  background: #e9f5ec;
+  color: #24683e;
+  font-size: 11px;
+  letter-spacing: 1px;
+  font-weight: 700;
+}
+.delivery-hero h2 {
+  font-size: clamp(28px, 3vw, 38px);
+  margin: 20px 0 12px;
+}
+.delivery-hero-copy > p {
+  color: #627a6c;
+  line-height: 1.7;
+}
+.delivery-identifiers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 28px;
+  margin-top: 28px;
+}
+.delivery-identifiers > div {
+  display: grid;
+  gap: 10px;
+}
+.delivery-identifiers small {
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: #758679;
+}
+.delivery-identifiers strong {
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+.delivery-arrival {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 16px;
+  padding: 32px;
+  background: #edf5ed;
+  text-align: center;
+}
+.delivery-arrival > .icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 22px;
+  padding: 15px;
+  background: #d7ebd7;
+  color: #2a7145;
+}
+.delivery-arrival small {
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: #5b7861;
+}
+.delivery-arrival strong {
+  max-width: 250px;
+  font-size: 23px;
+  line-height: 1.5;
+}
+.delivery-arrival > span:last-child {
+  font-size: 12px;
+  color: #677c6d;
+}
+.delivery-progress {
+  padding: 30px 32px;
+  margin-bottom: 24px;
+}
+.delivery-progress-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+.delivery-progress-heading h2 {
+  margin: 0;
+  font-size: 21px;
+}
+.delivery-live {
+  color: #28744b;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.delivery-stepper {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  list-style: none;
+  margin: 42px 0 24px;
+  padding: 0;
+}
+.delivery-milestone {
+  position: relative;
+  text-align: center;
+  min-width: 0;
+  padding: 0 8px;
+}
+.delivery-milestone:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  width: 100%;
+  height: 4px;
+  background: #dce3de;
+}
+.delivery-milestone.past::before {
+  background: var(--delivery-accent);
+}
+.milestone-dot {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 24px;
+  width: 40px;
+  height: 40px;
+  border: 4px solid white;
+  border-radius: 50%;
+  background: #e5eae6;
+  color: #718176;
+  font-size: 12px;
+}
+.milestone-dot .icon {
+  width: 19px;
+  height: 19px;
+}
+.delivery-milestone.complete .milestone-dot {
+  background: var(--delivery-accent);
+  color: white;
+}
+.delivery-milestone.current .milestone-dot {
+  box-shadow: 0 0 0 5px #267c5120;
+  animation: delivery-pulse 2s ease-in-out 3;
+}
+.milestone-copy {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+}
+.milestone-copy strong {
+  font-size: 15px;
+}
+.milestone-copy small {
+  color: #7d8b80;
+  font-size: 12px;
+}
+.milestone-copy time {
+  color: #6e7e73;
+  font-size: 11px;
+  line-height: 1.6;
+  max-width: 155px;
+}
+.milestone-symbol {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+}
+.symbol-0 {
+  color: #2375b9;
+  background: #eaf4ff;
+}
+.symbol-1 {
+  color: #b37a18;
+  background: #fff4d7;
+}
+.symbol-2 {
+  color: #198c9a;
+  background: #dff6f7;
+}
+.symbol-3 {
+  color: #338445;
+  background: #e5f4e8;
+}
+.delivery-disclosure {
+  border-top: 1px solid #e7ece7;
+  padding-top: 20px;
+  color: #7b897f;
+  font-size: 12px;
+  line-height: 1.8;
+  margin: 26px 0 0;
+}
+.delivery-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+.delivery-detail {
+  padding: 28px;
+  min-width: 0;
+}
+.delivery-detail h2 {
+  margin: 0 0 24px;
+  font-size: 20px;
+}
+.delivery-detail address {
+  display: grid;
+  gap: 10px;
+  font-style: normal;
+  line-height: 1.6;
+  margin-bottom: 24px;
+  overflow-wrap: anywhere;
+}
+.delivery-detail > small {
+  color: #78867b;
+}
+.delivery-detail > p {
+  line-height: 1.7;
+}
+.delivery-item {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 0;
+}
+.delivery-item > div:last-child {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.delivery-item strong {
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+.delivery-item small {
+  color: #758378;
+  font-size: 12px;
+}
+.delivery-order-total {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  border-top: 1px solid #e1e9e2;
+  padding-top: 18px;
+  margin: 16px 0 22px;
+}
+.delivery-empty {
+  padding: 40px;
+  margin-bottom: 24px;
+}
+.order-progress-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 28px;
+  border-bottom: 1px solid #e7ece7;
+  background: #f6faf6;
+}
+.order-progress-summary > div {
+  display: grid;
+  gap: 7px;
+}
+.order-progress-summary small {
+  color: #6c8170;
+  font-size: 12px;
+}
+.order-card > .coupon-savings {
+  margin: 0;
+  padding: 16px 28px 0;
+  font-size: 14px;
+}
+html[data-theme="dark"] :is(.delivery-arrival, .order-progress-summary) {
+  background: #20392c;
+  border-color: #3c5345;
+}
+html[data-theme="dark"]
+  :is(
+    .delivery-hero-copy > p,
+    .delivery-identifiers small,
+    .delivery-arrival small,
+    .delivery-arrival > span:last-child,
+    .delivery-live,
+    .milestone-copy small,
+    .milestone-copy time,
+    .delivery-disclosure
+  ) {
+  color: #b4cbbb;
+}
+html[data-theme="dark"] .delivery-milestone .milestone-dot {
+  border-color: #192a23;
+}
+@keyframes delivery-pulse {
+  50% {
+    box-shadow: 0 0 0 9px #267c5110;
+  }
+}
+@media (max-width: 720px) {
+  .delivery-hero,
+  .delivery-details-grid {
+    grid-template-columns: 1fr;
+  }
+  .delivery-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .delivery-hero-copy,
+  .delivery-progress {
+    padding: 24px;
+  }
+  .delivery-progress-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .delivery-stepper {
+    grid-template-columns: 1fr;
+    gap: 0;
+    margin-top: 28px;
+  }
+  .delivery-milestone {
+    display: flex;
+    gap: 18px;
+    text-align: left;
+    padding: 0 0 30px;
+  }
+  .delivery-milestone:not(:last-child)::before {
+    top: 20px;
+    left: 18px;
+    height: 100%;
+    width: 4px;
+  }
+  .milestone-dot {
+    margin: 0;
+    flex-shrink: 0;
+  }
+  .milestone-copy {
+    justify-items: start;
+    padding-top: 5px;
+    gap: 8px;
+  }
+  .milestone-symbol {
+    display: none;
+  }
+  .milestone-copy time {
+    max-width: none;
+  }
+  .delivery-milestone:last-child {
+    padding-bottom: 0;
+  }
+  .order-progress-summary {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 20px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .delivery-milestone.current .milestone-dot {
+    animation: none;
+  }
+}

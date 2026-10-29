@@ -1,0 +1,7 @@
+{
+  "name": "@training2/api-client",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": { "typecheck": "tsc --noEmit", "test": "node --test", "build": "tsc --noEmit" }
+}

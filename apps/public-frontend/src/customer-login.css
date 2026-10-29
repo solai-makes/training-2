@@ -1,0 +1,4 @@
+.customer-login-dialog .field > span { color: inherit; }
+.customer-login-dialog .tools-actions { display:flex; flex-wrap:wrap; gap:12px; margin:16px 0; }
+.customer-login-dialog .fine-print { line-height:1.65; }
+.customer-login-dialog .btn { white-space:normal; }

@@ -1,0 +1,24 @@
+{
+  "name": "@training2/public-api",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test src/*.test.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "2.1.5",
+    "@training2/api-contracts": "workspace:*",
+    "@training2/prisma": "workspace:*",
+    "hono": "4.13.13",
+    "jose": "6.2.13",
+    "@hono/zod-openapi": "1.6.3"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "3.1155.0",
+    "@types/node": "^26.6.4",
+    "tsx": "4.21.0"
+  }
+}

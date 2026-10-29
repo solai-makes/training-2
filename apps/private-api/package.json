@@ -1,0 +1,28 @@
+{
+  "name": "@training2/private-api",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --test",
+    "build": "tsc --noEmit",
+    "dev": "nodemon --legacy-watch --watch src --watch ../../packages/api-contracts/src --watch ../../packages/prisma/src --ext ts,js,json --exec node src/index.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "3.1155.0",
+    "@hono/node-server": "2.1.5",
+    "@hono/zod-openapi": "1.6.3",
+    "@prisma/adapter-pg": "7.10.1",
+    "@prisma/client": "7.10.1",
+    "@training2/api-contracts": "workspace:*",
+    "@training2/prisma": "workspace:*",
+    "hono": "4.13.13",
+    "jose": "6.2.13",
+    "pg": "8.23.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/pg": "8.23.1"
+  }
+}

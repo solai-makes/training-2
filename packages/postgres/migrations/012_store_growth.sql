@@ -1,0 +1,14 @@
+CREATE TABLE store_settings (id boolean PRIMARY KEY DEFAULT true CHECK(id), payload jsonb NOT NULL DEFAULT '{}'::jsonb, version integer NOT NULL DEFAULT 1, updated_at timestamptz NOT NULL DEFAULT now());
+INSERT INTO store_settings(id) VALUES(true);
+CREATE TABLE store_staff_roles (principal text PRIMARY KEY, role text NOT NULL CHECK(role IN ('manager','inventory','orders','support','disabled')), updated_by text NOT NULL, updated_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE store_admin_activity (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), actor text NOT NULL, action text NOT NULL, details jsonb NOT NULL DEFAULT '{}'::jsonb, created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE store_saved_carts (customer_id text PRIMARY KEY, items jsonb NOT NULL DEFAULT '[]'::jsonb, version integer NOT NULL DEFAULT 1, updated_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE store_loyalty_accounts (customer_id text PRIMARY KEY, enrolled_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE store_loyalty_orders (order_id uuid PRIMARY KEY REFERENCES orders(id) ON DELETE CASCADE, customer_id text NOT NULL, points_spent integer NOT NULL DEFAULT 0 CHECK(points_spent>=0), points_earned integer NOT NULL DEFAULT 0 CHECK(points_earned>=0), restored boolean NOT NULL DEFAULT false, earn_every integer NOT NULL CHECK(earn_every>=10));
+CREATE INDEX store_loyalty_customer_idx ON store_loyalty_orders(customer_id);
+CREATE TABLE store_loyalty_events (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), customer_id text NOT NULL, order_id uuid REFERENCES orders(id) ON DELETE CASCADE, delta integer NOT NULL, reason text NOT NULL, created_at timestamptz NOT NULL DEFAULT now());
+CREATE INDEX store_loyalty_events_customer_idx ON store_loyalty_events(customer_id,created_at DESC);
+CREATE TABLE store_support_tickets (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), customer_id text NOT NULL, subject text NOT NULL, order_id uuid REFERENCES orders(id) ON DELETE SET NULL, status text NOT NULL DEFAULT 'open' CHECK(status IN ('open','in_progress','resolved')), version integer NOT NULL DEFAULT 1, created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now());
+CREATE INDEX store_support_customer_idx ON store_support_tickets(customer_id,updated_at DESC);
+CREATE TABLE store_support_messages (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), ticket_id uuid NOT NULL REFERENCES store_support_tickets(id) ON DELETE CASCADE, sender text NOT NULL CHECK(sender IN ('customer','staff')), message text NOT NULL CHECK(length(message) BETWEEN 1 AND 2000), created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE store_sales_targets (period text NOT NULL CHECK(period IN ('week','month')), starts_on date NOT NULL, amount bigint NOT NULL CHECK(amount>0 AND amount<=1000000000000), version integer NOT NULL DEFAULT 1, updated_by text NOT NULL, updated_at timestamptz NOT NULL DEFAULT now(), PRIMARY KEY(period,starts_on));

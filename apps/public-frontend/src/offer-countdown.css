@@ -1,0 +1,191 @@
+.offer-countdown {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 5px;
+  margin: 0 22px 15px;
+  padding: 11px 13px;
+  background: #fff4df;
+  border: 1px solid #efdaad;
+  border-radius: 12px;
+  color: #83581a;
+}
+.offer-countdown > span {
+  font-size: 11px;
+  font-weight: 600;
+}
+.offer-countdown > strong {
+  font-variant-numeric: tabular-nums;
+  font-size: 15px;
+  color: #80501b;
+  letter-spacing: 0.4px;
+}
+.offer-countdown > small {
+  font-size: 10px;
+  opacity: 0.8;
+}
+.offer-countdown.active {
+  background: #fcefea;
+  border-color: #edd2c5;
+  color: #8d442c;
+}
+.offer-countdown.active > strong {
+  color: #98442e;
+}
+.offer-countdown.ended {
+  background: #f1f3ef;
+  border-color: #e0e5dd;
+  color: #73816e;
+}
+.detail-dialog .offer-countdown {
+  margin: 16px 0;
+}
+dialog.coupon-celebration {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: 65vw;
+  max-width: 1200px;
+  min-width: min(360px, calc(100vw - 32px));
+  height: 65dvh;
+  max-height: calc(100dvh - 32px);
+  min-height: min(430px, calc(100dvh - 32px));
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 22px;
+  padding: 48px;
+  border: 1px solid #bedac6;
+  border-radius: 34px;
+  background:
+    radial-gradient(ellipse at top right, #fff0c7 0, transparent 55%),
+    linear-gradient(140deg, #fcfff9, #ddf6e7);
+  color: #173f2c;
+  box-shadow: 0 35px 120px #0b271a40;
+  overflow: auto;
+  text-align: center;
+}
+dialog.coupon-celebration::backdrop {
+  background: #12291db3;
+  backdrop-filter: blur(6px);
+}
+.coupon-celebration[open] > strong {
+  color: #173f2c;
+  font-size: clamp(27px, 3vw, 46px);
+  letter-spacing: -1px;
+}
+dialog.coupon-celebration p {
+  display: grid;
+  gap: 8px;
+  color: #40634b;
+  font-size: clamp(16px, 2vw, 24px);
+}
+dialog.coupon-celebration p > b {
+  color: #137347;
+  font-size: clamp(38px, 6vw, 80px);
+  letter-spacing: -2px;
+  line-height: 1.15;
+}
+dialog.coupon-celebration > small {
+  display: inline-block;
+  border: 1px dashed #9fbd9e;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-size: 14px;
+  letter-spacing: 2px;
+  color: #527452;
+}
+dialog.coupon-celebration .coupon-success-icon {
+  width: 80px;
+  height: 80px;
+  font-size: 42px;
+  box-shadow: 0 0 0 13px #147a5010;
+}
+dialog.coupon-celebration .coupon-close {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  color: #315e3c;
+}
+dialog.coupon-celebration .coupon-sparkles {
+  top: 40px;
+  left: 42px;
+  font-size: 24px;
+  letter-spacing: 14px;
+  color: #b78b27;
+}
+dialog.coupon-celebration .coupon-continue {
+  min-width: 210px;
+}
+html[data-theme="dark"] .offer-countdown {
+  background: #3d3420;
+  border-color: #6d5a2c;
+  color: #f3d794;
+}
+html[data-theme="dark"] .offer-countdown > strong {
+  color: #ffe1a0;
+}
+html[data-theme="dark"] .offer-countdown.active {
+  background: #452c24;
+  border-color: #71503a;
+}
+html[data-theme="dark"] .offer-countdown.active > strong {
+  color: #ffc1a1;
+}
+@media (max-width: 650px) {
+  dialog.coupon-celebration {
+    width: calc(100vw - 28px);
+    height: 68dvh;
+    padding: 38px 22px;
+    gap: 18px;
+    border-radius: 26px;
+  }
+  dialog.coupon-celebration .coupon-success-icon {
+    width: 62px;
+    height: 62px;
+    font-size: 32px;
+  }
+  dialog.coupon-celebration .coupon-sparkles {
+    top: 32px;
+    left: 20px;
+    font-size: 16px;
+    letter-spacing: 8px;
+  }
+}
+html[data-theme="dark"] dialog.coupon-celebration .coupon-close {
+  color: #315e3c;
+}
+@media (max-height: 820px) and (min-width: 651px) {
+  dialog.coupon-celebration {
+    padding: 24px 32px;
+    gap: 12px;
+  }
+  dialog.coupon-celebration .coupon-success-icon {
+    width: 52px;
+    height: 52px;
+    font-size: 29px;
+  }
+  .coupon-celebration[open] > strong {
+    font-size: 32px;
+    line-height: 1.15;
+  }
+  dialog.coupon-celebration p {
+    gap: 6px;
+    font-size: 18px;
+    line-height: 1.4;
+  }
+  dialog.coupon-celebration p > b {
+    font-size: 60px;
+  }
+  dialog.coupon-celebration > small {
+    padding: 6px 16px;
+    font-size: 11px;
+    line-height: 1.2;
+  }
+  dialog.coupon-celebration .coupon-continue {
+    padding-block: 10px;
+    min-height: 42px;
+  }
+}

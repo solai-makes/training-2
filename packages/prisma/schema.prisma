@@ -1,0 +1,129 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model products {
+  id                     String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code                   String                   @unique
+  name                   String
+  description            String                   @default("")
+  price                  Int
+  stock                  Int
+  created_at             DateTime                 @default(now()) @db.Timestamptz(6)
+  updated_at             DateTime                 @default(now()) @db.Timestamptz(6)
+  product_number         BigInt                   @unique(map: "products_product_number_unique")
+  order_items            order_items[]
+  store_catalog_seeds    store_catalog_seeds[]
+  store_inventory_events store_inventory_events[]
+}
+
+model schema_migrations {
+  name       String   @id
+  checksum   String
+  applied_at DateTime @default(now()) @db.Timestamptz(6)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model order_items {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  order_id   String   @db.Uuid
+  product_id String   @db.Uuid
+  quantity   Int
+  orders     orders   @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  products   products @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([order_id, product_id], map: "order_items_order_product_unique")
+  @@index([order_id])
+  @@index([product_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model orders {
+  id                     String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  status                 String                   @default("pending")
+  created_at             DateTime                 @default(now()) @db.Timestamptz(6)
+  updated_at             DateTime                 @default(now()) @db.Timestamptz(6)
+  customer_id            String?
+  order_items            order_items[]
+  store_checkout_keys    store_checkout_keys[]
+  store_inventory_events store_inventory_events[]
+  store_order_details    store_order_details?
+  store_payments         store_payments?
+
+  @@index([customer_id])
+}
+
+model store_checkout_keys {
+  customer_id  String
+  key          String @db.Uuid
+  request_hash String
+  order_id     String @db.Uuid
+  orders       orders @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([customer_id, key])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model store_inventory_events {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  product_id   String?   @db.Uuid
+  product_code String
+  product_name String
+  delta        Int
+  stock_after  Int
+  reason       String
+  actor_id     String
+  order_id     String?   @db.Uuid
+  created_at   DateTime  @default(now()) @db.Timestamptz(6)
+  orders       orders?   @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  products     products? @relation(fields: [product_id], references: [id], onUpdate: NoAction)
+
+  @@index([created_at(sort: Desc)], map: "store_inventory_events_created_idx")
+}
+
+model store_order_details {
+  order_id   String   @id @db.Uuid
+  payload    Json
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  orders     orders   @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model store_catalog_seeds {
+  seed_key   String    @id
+  product_id String?   @db.Uuid
+  products   products? @relation(fields: [product_id], references: [id], onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model store_payments {
+  order_id            String   @id @db.Uuid
+  provider            String
+  state               String
+  currency            String
+  amount_minor        BigInt
+  fx_rate             Decimal  @db.Decimal
+  fx_date             String
+  provider_order_id   String?  @unique
+  provider_payment_id String?  @unique
+  provider_url        String?
+  provider_code_id    String?
+  reserved            Boolean  @default(false)
+  created_at          DateTime @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime @default(now()) @db.Timestamptz(6)
+  orders              orders   @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([state, updated_at], map: "store_payments_state_idx")
+}
+
+model store_catalog_batches {
+  batch_key String @id
+  baseline  Int
+  target    Int
+  added     Int    @default(0)
+}

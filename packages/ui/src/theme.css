@@ -1,0 +1,221 @@
+.theme-toggle {
+  border: 1px solid #98aa9d;
+  border-radius: 30px;
+  background: transparent;
+  padding: 9px 13px;
+  color: inherit;
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+html[data-theme="dark"] {
+  --ink: #e4eee8;
+  --muted: #afc0b6;
+  --line: #35483f;
+  --paper: #14221d;
+  --green: #70d9ad;
+  background: #101b17;
+  color: #e4eee8;
+}
+html[data-theme="dark"] body {
+  background: #101b17;
+  color: #e4eee8;
+}
+html[data-theme="dark"] :is(.staff-app, .main-content, .storefront) {
+  background: #101b17;
+}
+html[data-theme="dark"]
+  :is(
+    .card,
+    .product-card,
+    .dialog,
+    .sidebar,
+    .topbar,
+    .site-header,
+    .header,
+    .order-card,
+    .filter-row,
+    .analytics-card,
+    .chart-card,
+    .panel,
+    .metric-card,
+    .summary,
+    .dropdown,
+    .login-card
+  ) {
+  background: #192a23;
+  color: #e4eee8;
+  border-color: #364b40;
+}
+html[data-theme="dark"]
+  :is(
+    h1,
+    h2,
+    h3,
+    h4,
+    strong,
+    label,
+    td,
+    td strong,
+    th,
+    code,
+    .brand,
+    .price,
+    .summary-total,
+    .section-heading,
+    .product-name
+  ) {
+  color: #e4eee8;
+}
+html[data-theme="dark"]
+  :is(.muted, small, .fine-print, .product-category, .stock-line, .nav-item) {
+  color: #afc0b6;
+}
+html[data-theme="dark"]
+  :is(
+    input,
+    select,
+    textarea,
+    th,
+    .coupon-box,
+    .chip,
+    .btn.secondary,
+    .btn.plain
+  ) {
+  background: #20352c;
+  color: #e4eee8;
+  border-color: #51685c;
+}
+html[data-theme="dark"]
+  :is(
+    .hero,
+    .hero-copy,
+    .benefits,
+    .empty-state,
+    .order-header,
+    .success-banner
+  ) {
+  background: #20352c;
+  color: #e4eee8;
+}
+html[data-theme="dark"] :is(td, th, .summary-line, .summary-total) {
+  border-color: #364b40;
+}
+html[data-theme="dark"] .coupon-error {
+  color: #ffabb3;
+}
+html[data-theme="dark"] :is(.coupon-savings, .green) {
+  color: #83e9b7;
+}
+html[data-theme="dark"] .coupon-celebration :is(strong, small) {
+  color: #143c2c;
+}
+.advanced-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: end;
+  padding: 16px 0 24px;
+}
+.advanced-filters label {
+  display: grid;
+  gap: 6px;
+  font-size: 0.875rem;
+}
+.advanced-filters input[type="number"] {
+  width: 140px;
+}
+.catalog-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin: 32px 0;
+}
+.tracking-timeline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 18px 0;
+}
+.tracking-step {
+  padding: 7px 12px;
+  border-radius: 20px;
+  background: #edf1ee;
+  color: #53655b;
+  font-size: 0.8rem;
+}
+.tracking-step.complete {
+  background: #d5f2e2;
+  color: #155a38;
+}
+html[data-theme="dark"] .tracking-step {
+  background: #294236;
+  color: #bdcfc3;
+}
+html[data-theme="dark"] .tracking-step.complete {
+  background: #296046;
+  color: #dbffeb;
+}
+html[data-theme="dark"]
+  :is(
+    .shop-header,
+    .department-nav,
+    .search-box,
+    .cart-row,
+    .order-head,
+    .staff-header,
+    .stat-card,
+    .analytics-panel
+  ) {
+  background: #192a23;
+  color: #e4eee8;
+  border-color: #364b40;
+}
+html[data-theme="dark"]
+  :is(
+    .brand,
+    .brand b,
+    .brand i,
+    .header-account,
+    .header-account strong,
+    .header-account small,
+    .header-cart,
+    .department-nav button,
+    .search-box .icon
+  ) {
+  color: #e4eee8;
+}
+html[data-theme="dark"] .coupon-box small {
+  color: #b8d0c1;
+}
+html[data-theme="dark"] .btn.primary {
+  color: #173c2c;
+}
+html[data-theme="dark"]
+  :is(.workspace-header, .sidebar-help, .staff-login-form, .sales-donut > div) {
+  background: #192a23;
+  color: #e4eee8;
+  border-color: #364b40;
+}
+html[data-theme="dark"]
+  :is(
+    .sidebar-caption,
+    .eyebrow,
+    .workspace-title .eyebrow,
+    .analytics-kpi > span,
+    .sidebar-help p,
+    .workspace-header .muted,
+    .btn.text,
+    .sidebar nav > button
+  ) {
+  color: #bbd0c1;
+}
+html[data-theme="dark"] .sidebar nav > button.selected {
+  background: #345b45;
+  color: #fff;
+}
+html[data-theme="dark"] :is(.revenue-chart, .stock-chart) text {
+  fill: #bbd0c1;
+}

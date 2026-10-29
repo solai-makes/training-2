@@ -1,0 +1,52 @@
+include:
+  - path: ../infra/docker/docker-compose.yml
+
+services:
+  app:
+    build:
+      context: ../infra/docker
+      dockerfile: Dockerfile
+    privileged: true
+    command: sleep infinity
+    volumes:
+      - ..:/workspaces/training2:cached
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/training2?schema=public
+      PGHOST: db
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: training2
+      AWS_ACCESS_KEY_ID: local
+      AWS_SECRET_ACCESS_KEY: local
+      AWS_DEFAULT_REGION: local
+      COGNITO_LOCAL_ENDPOINT: http://cognito-local:9229
+      COGNITO_ISSUER_DOMAIN: http://localhost:9229
+      COGNITO_POOL_NAME: training2
+      COGNITO_CLIENT_NAME: training2-app
+      PUBLIC_API_PORT: "3000"
+      PRIVATE_API_PORT: "3001"
+      PUBLIC_API_CORS_ORIGINS: http://localhost:5173
+      PRIVATE_API_CORS_ORIGINS: http://localhost:5174
+    depends_on:
+      - db
+      - cognito-local
+    networks:
+      - training2
+
+  cognito-local:
+    image: jagregory/cognito-local:latest
+    restart: unless-stopped
+    ports:
+      - "9229:9229"
+    volumes:
+      - cognito-data:/app/.cognito
+      - ./cognito/config.json:/app/.cognito/config.json
+    networks:
+      - training2
+
+volumes:
+  cognito-data:
+
+networks:
+  training2:
