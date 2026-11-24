@@ -3,6 +3,11 @@ packages:
   - 'packages/*'
 
 allowBuilds:
+  vue-demi: true
   esbuild: true
   '@prisma/engines': true
   prisma: true
+
+minimumReleaseAgeExclude:
+  - '@tanstack/query-core@5.108.4'
+  - '@tanstack/vue-query@5.108.4'

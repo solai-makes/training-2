@@ -1,4 +1,6 @@
-import { h, t } from "../../../packages/ui/src/language.ts";
+import {RevenueChart} from "./revenue-chart.ts";
+import {AnimatedNumber} from "../../../packages/ui/src/animated-number.ts";
+import { h, t, locale } from "../../../packages/ui/src/language.ts";
 import { money } from "../../../packages/ui/src/storefront.ts";
 import { createStatsPdf } from "./stats-pdf.ts";
 
@@ -37,23 +39,17 @@ const trend = (r: SalesReport) =>
         t("vs previous period");
 export function salesDashboard(
   report: SalesReport | null,
-  days: number,
-  setDays: (days: number) => void,
+  days: number | "custom",
+  setDays: (days: number | "custom") => void,
   onError: (message: string) => void,
+  controls?:{from:string;to:string;loading:boolean;onFrom:(value:string)=>void;onTo:(value:string)=>void;onApply:()=>void;onClear?:()=>void},
 ) {
   if (!report)
     return h("section", { class: "card sales-dashboard" }, [
       h("h2", "Inventory dashboard"),
       h("p", "Loading…"),
     ]);
-  const r = report,
-    max = Math.max(1, ...r.daily.map((d) => d.revenue)),
-    points = r.daily
-      .map(
-        (d, i) =>
-          `${24 + (i * 632) / (r.daily.length - 1)},${178 - (d.revenue / max) * 145}`,
-      )
-      .join(" ");
+  const r=report;
   type RankingRow = {
     id: string;
     name: string;
@@ -120,11 +116,13 @@ export function salesDashboard(
             "aria-label": "Reporting period",
             value: days,
             onChange: (e: Event) =>
-              setDays(Number((e.target as HTMLSelectElement).value)),
+              setDays((e.target as HTMLSelectElement).value==="custom"?"custom":Number((e.target as HTMLSelectElement).value)),
           },
           [
             h("option", { value: 7 }, "7 days"),
+            h("option", { value: 15 }, "15 days"),
             h("option", { value: 30 }, "30 days"),
+            h("option", { value: "custom" }, "Custom dates"),
           ],
         ),
         h(
@@ -132,6 +130,7 @@ export function salesDashboard(
           {
             class: "btn primary",
             type: "button",
+            disabled:controls?.loading,
             onClick: () =>
               void downloadStats(r).catch((e) => onError(e.message)),
           },
@@ -139,30 +138,36 @@ export function salesDashboard(
         ),
       ]),
     ]),
+    days==='custom'&&controls?h('form',{class:'analytics-custom-dates',onSubmit:(event:Event)=>{event.preventDefault();controls.onApply();}},[
+      h('label',[h('span','Start date'),h('input',{type:'date',value:controls.from,required:true,'aria-label':'Start date',onInput:(e:Event)=>controls.onFrom((e.target as HTMLInputElement).value)})]),
+      h('label',[h('span','End date'),h('input',{type:'date',value:controls.to,min:controls.from||undefined,required:true,'aria-label':'End date',onInput:(e:Event)=>controls.onTo((e.target as HTMLInputElement).value)})]),
+      h('button',{type:'submit',class:'btn primary',disabled:controls.loading},controls.loading?'Loading…':'Apply dates'),h('button',{type:'button',class:'btn secondary',disabled:controls.loading,onClick:()=>controls.onClear?.()},'Clear dates'),h('small','Choose up to 366 days. Both dates are included.')
+    ]):null,
+    controls?.loading?h('p',{role:'status',class:'muted'},'Updating report…'):null,
     h(
       "div",
       { class: "analytics-kpis" },
       [
-        ["Sales revenue", money(r.revenue), trend(r)],
+        ["Sales revenue", r.revenue, trend(r)],
         [
           "Orders placed",
-          String(r.orders),
+          r.orders,
           `${r.unitsSold} ${t("Units sold")}`,
         ],
         [
           "Current stock",
-          String(r.currentStock),
+          r.currentStock,
           `${r.productCount} ${t("Products")}`,
         ],
         [
           "Stock retail value",
-          money(r.retailValue),
+          r.retailValue,
           "Retail price × current stock",
         ],
-      ].map(([label, value, description]) =>
-        h("article", { class: "card analytics-kpi" }, [
+      ].map(([label, value, description], index) =>
+        h("article", { key:String(label), class: "card analytics-kpi", style:{"--kpi-delay":`${index*80}ms`} }, [
           h("span", label),
-          h("strong", { key: value, class: "animated-value" }, value),
+          h(AnimatedNumber, {value:Number(value), format:label==="Sales revenue"||label==="Stock retail value"?"money":"number", delay:index*80}),
           h(
             "small",
             {
@@ -182,85 +187,8 @@ export function salesDashboard(
       h("section", { class: "card analytics-panel" }, [
         h("h3", "Revenue trend"),
         h("p", { class: "muted" }, "Confirmed order value · JPY"),
-        h(
-          "svg",
-          {
-            class: "revenue-chart",
-            viewBox: "0 0 680 220",
-            role: "img",
-            "aria-label": "Revenue trend",
-          },
-          [
-            ...Array.from({ length: 4 }, (_, i) =>
-              h("g", [
-                h("line", {
-                  x1: 24,
-                  x2: 656,
-                  y1: 33 + i * 48,
-                  y2: 33 + i * 48,
-                  stroke: "#e3eae4",
-                }),
-                h(
-                  "text",
-                  { x: 24, y: 25 + i * 48, fill: "#677a6d", "font-size": 11 },
-                  money(Math.round(max * (1 - i / 3))),
-                ),
-              ]),
-            ),
-            h("polygon", {
-              points: `24,178 ${points} 656,178`,
-              fill: "#ddeede",
-            }),
-            h("polyline", {
-              points,
-              fill: "none",
-              stroke: "#397c52",
-              "stroke-width": 4,
-              "stroke-linecap": "round",
-              "stroke-linejoin": "round",
-              class: "revenue-line",
-            }),
-            ...r.daily.map((d, i) =>
-              h(
-                "circle",
-                {
-                  cx: 24 + (i * 632) / (r.daily.length - 1),
-                  cy: 178 - (d.revenue / max) * 145,
-                  r: 4,
-                  fill: "#397c52",
-                },
-                [
-                  h(
-                    "title",
-                    d.day +
-                      ": " +
-                      money(d.revenue) +
-                      " · " +
-                      d.orders +
-                      " " +
-                      t("Orders"),
-                  ),
-                ],
-              ),
-            ),
-            h(
-              "text",
-              { x: 24, y: 210, "font-size": 13, fill: "#677a6d" },
-              r.from,
-            ),
-            h(
-              "text",
-              {
-                x: 656,
-                y: 210,
-                "text-anchor": "end",
-                "font-size": 13,
-                fill: "#677a6d",
-              },
-              r.to,
-            ),
-          ],
-        ),
+        h("p",{class:"fine-print"},"Hover, tap or focus a point to see daily sales."),
+        h(RevenueChart,{key:r.from+":"+r.to,daily:r.daily,from:r.from,to:r.to}),
         h("details", [
           h("summary", "Daily figures"),
           h("div", { class: "analytics-table-scroll" }, [
@@ -287,8 +215,12 @@ export function salesDashboard(
           ]),
         ]),
       ]),
-      h("section", { class: "card analytics-panel" }, [
+      h("section", { class: "card analytics-panel sales-mix-panel" }, [
         h("h3", "Sales mix"),
+        h("div", { class: "sales-mix-total" }, [
+          h("small", "Total sales"),
+          h(AnimatedNumber, {value:r.revenue,format:"money"}),
+        ]),
         h(
           "div",
           {
@@ -302,21 +234,25 @@ export function salesDashboard(
           },
           [
             h("div", [
-              h("strong", money(r.revenue)),
-              h("small", "Sales revenue"),
+              h(AnimatedNumber, {value:r.revenue?r.demoRevenue/r.revenue:0,format:"percent"}),
+              h("small", "Demo share"),
             ]),
           ],
         ),
-        h("p", [
-          h("i", { class: "legend-dot demo" }),
-          "Demo sales",
-          h("b", money(r.demoRevenue)),
-        ]),
-        h("p", [
-          h("i", { class: "legend-dot" }),
-          "Other sales",
-          h("b", money(r.revenue - r.demoRevenue)),
-        ]),
+        h(
+          "div",
+          { class: "sales-mix-legend" },
+          [
+            ["Demo sales", r.demoRevenue, "demo"],
+            ["Other sales", r.revenue - r.demoRevenue, ""],
+          ].map(([label, value, tone]) =>
+            h("div", [
+              h("i", { class: `legend-dot ${tone}` }),
+              h("span", String(label)),
+              h("b", money(Number(value))),
+            ]),
+          ),
+        ),
         h(
           "p",
           { class: "fine-print" },

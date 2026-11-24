@@ -22,6 +22,9 @@ watch(
   (value) => {
     if (typeof document !== "undefined") {
       document.documentElement.lang = value;
+      // The app owns translation; browser translation otherwise creates mixed-language UI.
+      document.documentElement.setAttribute("translate", "no");
+      document.documentElement.classList.add("notranslate");
       localStorage.setItem("solaistore.language", value);
     }
   },
@@ -139,13 +142,13 @@ const rows: Array<[string, string, string, string]> = [
   [
     "Demo completed. No money charged; receipt ready.",
     "மாதிரி முடிந்தது. பணம் பிடிக்கப்படவில்லை; ரசீது தயார்.",
-    "デモ完了。請求はありません。領収書を保存できます。",
+    "シミュレーション完了。請求はありません。領収書を保存できます。",
     "演示已完成，未扣款，收据已就绪。",
   ],
   [
     "SOLAISTORE · DEMO ONLY",
     "சோலைஸ்டோர் · மாதிரி மட்டும்",
-    "SOLAISTORE・デモ専用",
+    "SOLAISTORE・シミュレーション専用",
     "SOLAISTORE · 仅供演示",
   ],
   [
@@ -163,7 +166,7 @@ const rows: Array<[string, string, string, string]> = [
   [
     "Demo payment cancelled. Resume or cancel the saved order from Your orders.",
     "மாதிரிக் கட்டணம் ரத்தானது. உங்கள் ஆர்டர்களில் தொடரலாம் அல்லது ரத்து செய்யலாம்.",
-    "デモ決済をキャンセルしました。注文履歴から再開または注文の取り消しができます。",
+    "シミュレーション決済をキャンセルしました。注文履歴から再開または注文の取り消しができます。",
     "演示付款已取消，可在订单中继续或取消已保存订单。",
   ],
   [
@@ -323,8 +326,8 @@ const rows: Array<[string, string, string, string]> = [
     "テスト決済金額",
     "测试结账金额",
   ],
-  ["Demo card payment", "மாதிரி அட்டை கட்டணம்", "デモカード決済", "演示银行卡付款"],
-  ["Demo QR payment", "மாதிரி QR கட்டணம்", "デモQR決済", "演示二维码付款"],
+  ["Demo card payment", "மாதிரி அட்டை கட்டணம்", "シミュレーションカード決済", "演示银行卡付款"],
+  ["Demo QR payment", "மாதிரி QR கட்டணம்", "シミュレーションQR決済", "演示二维码付款"],
   [
     "Fake card supplied · no money charged · no keys needed",
     "மாதிரி அட்டை உள்ளது · பணம் பிடிக்கப்படாது · சாவிகள் தேவையில்லை",
@@ -340,13 +343,13 @@ const rows: Array<[string, string, string, string]> = [
   [
     "Demo payments use fictional details. No bank, card or wallet is charged.",
     "மாதிரிக் கட்டணங்கள் கற்பனை விவரங்களைப் பயன்படுத்துகின்றன. வங்கி, அட்டை அல்லது பணப்பையிலிருந்து பணம் பிடிக்கப்படாது.",
-    "デモ決済には架空の情報を使用します。銀行・カード・ウォレットへの請求はありません。",
+    "シミュレーション決済には架空の情報を使用します。銀行・カード・ウォレットへの請求はありません。",
     "演示付款使用虚拟信息，不会从银行、银行卡或钱包扣款。",
   ],
   [
     "Complete demo payment",
     "மாதிரிக் கட்டணத்தை முடி",
-    "デモ決済を完了",
+    "シミュレーション決済を完了",
     "完成演示付款",
   ],
   ["Cancel", "ரத்து செய்", "キャンセル", "取消"],
@@ -484,7 +487,7 @@ const rows: Array<[string, string, string, string]> = [
     "低库存提醒",
   ],
   ["Sales mix", "விற்பனைக் கலவை", "売上の内訳", "销售构成"],
-  ["Demo sales", "மாதிரி விற்பனை", "デモ売上", "演示销售"],
+  ["Demo sales", "மாதிரி விற்பனை", "シミュレーション売上", "演示销售"],
   ["Other sales", "பிற விற்பனை", "その他の売上", "其他销售"],
   ["No sales yet", "இன்னும் விற்பனை இல்லை", "売上はまだありません", "暂无销售"],
   ["7 days", "7 நாட்கள்", "7日間", "7天"],
@@ -582,7 +585,7 @@ function translate(value: string, depth = 0): string {
   );
 }
 export function t(value: string): string {
-  return translate(value);
+  return translate(value).replace(/\bDEMO_CARD\b/gi,"Simulated card").replace(/\bDEMO_QR\b/gi,"Simulated QR").replace(/\bDEMO\b/g,"SIMULATED").replace(/\bDemo\b/g,"Simulated").replace(/\bdemo\b/g,"simulated");
 }
 
 function translateChildren(value: any): any {
@@ -614,7 +617,7 @@ export const h: typeof vueH = ((...args: any[]) => {
   return (vueH as any)(...args);
 }) as typeof vueH;
 export function languageSelect() {
-  return vueH("label", { class: "language-picker" }, [
+  return vueH("label", { class: "language-picker notranslate", translate: "no" }, [
     vueH("span", { "aria-hidden": "true" }, "◎   "),
     vueH(
       "select",

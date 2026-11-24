@@ -1,0 +1,65 @@
+name: Training 3 checks and container
+on:
+  pull_request:
+  push:
+    branches: [main, "training3/**"]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: training3-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '26.10.0'
+      - run: npm install --global pnpm@12.9.1
+      - run: pnpm install --frozen-lockfile
+      - name: Generate Prisma client from committed schema
+        run: pnpm --filter @training2/prisma exec prisma generate
+      - name: Type check
+        run: pnpm typecheck
+      - name: Unit tests
+        run: node tools/test-unit.mjs
+      - name: Build
+        run: pnpm build
+  image:
+    needs: checks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v6
+      - name: Build Docker image
+        run: docker build -f infra/docker/Dockerfile.training3 -t ghcr.io/solai-makes/training-2:training3 -t ghcr.io/solai-makes/training-2:sha-${{ github.sha }} .
+      - name: Start isolated database and authentication
+        run: docker compose --env-file infra/docker/compose-vars -f infra/docker/compose.training3.yml up -d --wait db cognito-local
+      - name: GraphQL integration tests
+        run: |
+          docker compose --env-file infra/docker/compose-vars -f infra/docker/compose.training3.yml exec -T db psql -U postgres -d postgres -c 'CREATE DATABASE training3_qa'
+          docker run -d --name training3-qa --network solaistore-training3_default -e DATABASE_URL=postgresql://postgres:local-training3-only@db:5432/training3_qa -e COGNITO_LOCAL_ENDPOINT=http://cognito-local:9229 -e COGNITO_ISSUER_DOMAIN=http://localhost:9229 ghcr.io/solai-makes/training-2:training3
+          for attempt in $(seq 1 60); do
+            if docker exec training3-qa node -e "fetch('http://127.0.0.1:3001/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"; then break; fi
+            sleep 2
+          done
+          docker exec training3-qa node apps/private-api/src/graphql.integration.mjs
+          docker exec training3-qa node apps/private-api/src/staff-graphql.integration.mjs
+          docker exec training3-qa node apps/private-api/src/automatic-delivery.test.mjs
+      - name: Runtime diagnostics
+        if: failure()
+        run: docker logs training3-qa || true
+      - name: Sign in to GHCR
+        if: github.event_name != 'pull_request'
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: echo "$GHCR_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - name: Push Docker image
+        if: github.event_name != 'pull_request'
+        run: |
+          docker push ghcr.io/solai-makes/training-2:training3
+          docker push ghcr.io/solai-makes/training-2:sha-${{ github.sha }}

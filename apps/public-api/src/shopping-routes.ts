@@ -1,3 +1,4 @@
+import {restockRequests, requestRestock, cancelRestock} from "../../../packages/prisma/src/restock.ts";
 import { findOrderByTrackingReference } from "../../../packages/prisma/src/shopping-tools.ts";
 import { z } from "@hono/zod-openapi";
 import { Hono } from "hono";
@@ -79,3 +80,7 @@ shoppingRoutes.onError((failure, c) =>
 );
 
 shoppingRoutes.get("/track-reference", async c => c.json(await findOrderByTrackingReference(c.req.query("reference") ?? "", c.get("customerId"))));
+
+shoppingRoutes.get("/restock", async c=>c.json({items:await restockRequests(c.get("customerId"))}));
+shoppingRoutes.post("/restock/:id", async c=>c.json(await requestRestock(c.get("customerId"),uuid(c.req.param("id"))),201));
+shoppingRoutes.delete("/restock/:id", async c=>{await cancelRestock(c.get("customerId"),uuid(c.req.param("id")));return c.body(null,204);});

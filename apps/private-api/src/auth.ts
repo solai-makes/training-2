@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import {
   CognitoIdentityProviderClient,
   InitiateAuthCommand,
+  GetUserCommand,
 } from "@aws-sdk/client-cognito-identity-provider";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 
@@ -55,9 +56,45 @@ export async function verify(token: string) {
 
   return {
     sub: payload.sub,
-    username: typeof payload.username === "string" ? payload.username : typeof payload["cognito:username"] === "string" ? payload["cognito:username"] : payload.sub,
+    username: await verifiedPrincipal(
+      token,
+      payload.sub,
+      typeof payload.username === "string"
+        ? payload.username
+        : typeof payload["cognito:username"] === "string"
+          ? payload["cognito:username"]
+          : payload.sub,
+    ),
     admin:
       Array.isArray(payload["cognito:groups"]) &&
       payload["cognito:groups"].includes("admin"),
   };
+}
+
+const principalCache = new Map<
+  string,
+  { principal: string; expires: number }
+>();
+/** Access tokens may identify a UUID username; roles are assigned to verified email principals. */
+export async function verifiedPrincipal(
+  token: string,
+  sub: string,
+  username: string,
+) {
+  if (username.includes("@")) return username.toLowerCase();
+  const cached = principalCache.get(sub);
+  if (cached && cached.expires > Date.now()) return cached.principal;
+  const user = await cognito.send(new GetUserCommand({ AccessToken: token }));
+  const email = user.UserAttributes?.find(
+    (attribute) => attribute.Name === "email",
+  )?.Value;
+  const verified =
+    user.UserAttributes?.find(
+      (attribute) => attribute.Name === "email_verified",
+    )?.Value === "true";
+  const principal = email && verified ? email.toLowerCase() : username;
+  if (principalCache.size >= 1000)
+    principalCache.delete(principalCache.keys().next().value!);
+  principalCache.set(sub, { principal, expires: Date.now() + 60000 });
+  return principal;
 }

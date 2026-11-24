@@ -4,7 +4,7 @@ import {
   allowed,
   type Role,
   type Settings,
-} from "../../../packages/api-contracts/src/store-growth.ts";
+} from "../../../packages/api-contracts/src/growth-policy.ts";
 import { h } from "../../../packages/ui/src/language.ts";
 import { date, money } from "../../../packages/ui/src/storefront.ts";
 import type { Requester } from "../../../packages/ui/src/shopping-tools.ts";
@@ -47,7 +47,7 @@ export function useStaffGrowth(
       note: "",
     }),
     targetDraft = reactive<Record<string, string>>({});
-  const targetVersions = reactive<Record<string,number>>({});
+  const targetVersions = reactive<Record<string, number>>({});
   const support = ref<Ticket[]>([]),
     selectedTicket = ref(""),
     reply = ref(""),
@@ -73,8 +73,10 @@ export function useStaffGrowth(
   const can = (permission: string) => allowed(role.value, permission);
   const pagePermission: Record<string, string> = {
     overview: "analytics:view",
+    profit: "analytics:view",
     inventory: "catalog:write",
     orders: "orders:view",
+    "delivery-partners":"orders:view",
     activity: "catalog:write",
     prices: "catalog:write",
     variants: "catalog:write",
@@ -109,9 +111,11 @@ export function useStaffGrowth(
       if (page === "targets") {
         targetData.value = await json("/store/growth/targets");
         for (const item of targetData.value.items)
-          if (targetDraft[item.period] === undefined) { targetVersions[item.period]=item.version;
+          if (targetDraft[item.period] === undefined) {
+            targetVersions[item.period] = item.version;
             targetDraft[item.period] =
-              item.amount === null ? "" : String(item.amount); }
+              item.amount === null ? "" : String(item.amount);
+          }
       }
       if (page === "support")
         support.value = (
@@ -286,8 +290,12 @@ export function useStaffGrowth(
                             version: targetVersions[item.period],
                           }),
                         });
-                        for(const saved of targetData.value.items) {targetVersions[saved.period]=saved.version;targetDraft[saved.period]=saved.amount===null?"":String(saved.amount);}
-                      notify("Sales target saved.");
+                        for (const saved of targetData.value.items) {
+                          targetVersions[saved.period] = saved.version;
+                          targetDraft[saved.period] =
+                            saved.amount === null ? "" : String(saved.amount);
+                        }
+                        notify("Sales target saved.");
                       }),
                     busy.value,
                   ),
@@ -296,7 +304,14 @@ export function useStaffGrowth(
           ]);
         }),
       ),
-      button("Reload targets",()=>{for(const key of Object.keys(targetDraft))delete targetDraft[key];void load("targets");},busy.value),
+      button(
+        "Reload targets",
+        () => {
+          for (const key of Object.keys(targetDraft)) delete targetDraft[key];
+          void load("targets");
+        },
+        busy.value,
+      ),
       h("p", { class: "growth-muted" }, targetData.value.note),
     ];
   }
@@ -354,7 +369,7 @@ export function useStaffGrowth(
               "div",
               { class: "growth-conversation" },
               current.messages.map((m) =>
-                h("div", { class: `growth-message ${m.sender}` }, [
+                h("div", { class: `growth-message ${m.sender} ${m.sender === "staff" ? "sent" : "received"}` }, [
                   h("small", `${m.sender} · ${date(m.createdAt)}`),
                   m.message,
                 ]),

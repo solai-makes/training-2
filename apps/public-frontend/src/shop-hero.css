@@ -31,7 +31,7 @@
   max-width: 300px;
 }
 .hero-carousel.hero-tone-sage {
-  background: #e8efe1;
+  background: #e1e7ef;
 }
 .hero-carousel.hero-tone-sand {
   background: #f3eadc;
@@ -70,31 +70,31 @@
   width: 7px;
   height: 7px;
   border-radius: 20px;
-  background: #81957a66;
+  background: #70849f66;
   transition:
     width 0.25s,
     background 0.25s;
 }
 .hero-dots .active span {
   width: 24px;
-  background: #31583c;
+  background: #252a30;
 }
 .hero-slide-count {
   font-size: 10px;
-  color: #6f8369;
+  color: #5e738e;
   letter-spacing: 1px;
 }
 .hero-rotation-toggle {
   margin-left: auto;
   background: #ffffff88;
-  color: #365a3b;
-  border: 1px solid #6f8b632e;
+  color: #36465a;
+  border: 1px solid #5f748f2e;
   border-radius: 30px;
   padding: 8px 13px;
   font-size: 11px;
 }
 html[data-theme="dark"] .hero-carousel.hero-tone-sage {
-  background: #20392b;
+  background: #181b1f;
 }
 html[data-theme="dark"] .hero-carousel.hero-tone-sand {
   background: #3b3327;
@@ -109,21 +109,21 @@ html[data-theme="dark"] .hero-carousel .hero-copy {
   background: transparent;
 }
 html[data-theme="dark"] .hero-carousel .hero-copy > p {
-  color: #bccdbb;
+  color: #b8c2d0;
 }
 html[data-theme="dark"] .hero-carousel .float-label {
-  background: #243e2d;
-  color: #e5f0e3;
+  background: #1b1e22;
+  color: #e3e9f0;
 }
 html[data-theme="dark"] .hero-slide-count {
-  color: #c6d3c2;
+  color: #c0c9d5;
 }
 html[data-theme="dark"] .hero-dots .active span {
-  background: #b7d39d;
+  background: #9db4d3;
 }
 html[data-theme="dark"] .hero-rotation-toggle {
-  background: #1a2b2199;
-  color: #c7dac2;
+  background: #13151899;
+  color: #c2ccda;
 }
 @keyframes hero-slide-in {
   from {

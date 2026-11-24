@@ -5,7 +5,7 @@
 }
 .growth-card {
   background: var(--surface, #fff);
-  border: 1px solid #dde5da;
+  border: 1px solid #d9dfe6;
   border-radius: 18px;
   padding: 26px;
   min-width: 0;
@@ -26,7 +26,7 @@
   font-size: 34px;
   font-weight: 750;
   display: block;
-  color: #24523c;
+  color: #1e242b;
   margin: 12px 0;
 }
 .growth-actions {
@@ -50,10 +50,10 @@
   width: 100%;
   max-width: 100%;
   padding: 12px 14px;
-  border: 1px solid #cdd9c7;
+  border: 1px solid #c7cfd9;
   border-radius: 9px;
   background: #fff;
-  color: #243b32;
+  color: #1a1d21;
   font: inherit;
   box-sizing: border-box;
 }
@@ -75,11 +75,11 @@
   display: block;
   width: 100%;
   height: 18px;
-  accent-color: #347153;
+  accent-color: #344e71;
   margin: 18px 0;
 }
 .growth-muted {
-  color: #667a68;
+  color: #5a6d86;
   font-size: 14px;
 }
 .growth-list {
@@ -88,7 +88,7 @@
 }
 .growth-row {
   padding: 16px;
-  border: 1px solid #e1e7dd;
+  border: 1px solid #dce1e8;
   border-radius: 12px;
   display: flex;
   justify-content: space-between;
@@ -106,8 +106,8 @@
 .growth-status {
   padding: 5px 10px;
   border-radius: 20px;
-  background: #edf4e9;
-  color: #315c42;
+  background: #e9eef4;
+  color: #262b32;
   font-size: 13px;
   text-transform: capitalize;
   white-space: nowrap;
@@ -122,18 +122,18 @@
 .growth-message {
   border-radius: 12px;
   padding: 14px 16px;
-  background: #f1f5ed;
+  background: #edf0f5;
   max-width: 90%;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 .growth-message.staff {
   margin-left: auto;
-  background: #e4f2e9;
+  background: #e4eaf2;
 }
 .growth-message small {
   display: block;
-  color: #627665;
+  color: #566982;
   font-size: 12px;
   margin-bottom: 6px;
 }
@@ -143,8 +143,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 18px 22px;
-  background: #eaf3e4;
-  border: 1px solid #cadfc3;
+  background: #e4ebf3;
+  border: 1px solid #c3cfdf;
   border-radius: 14px;
   margin: 20px 0;
   flex-wrap: wrap;
@@ -155,7 +155,7 @@
 .growth-redeem {
   padding: 18px;
   border-radius: 12px;
-  background: #f4f7ee;
+  background: #eef2f7;
   margin: 18px 0;
 }
 .growth-redeem label {
@@ -166,16 +166,16 @@
 .growth-redeem input {
   width: 100%;
   padding: 10px;
-  border: 1px solid #c6d3bf;
+  border: 1px solid #bec8d4;
   border-radius: 8px;
   font: inherit;
 }
 .growth-announcement {
   padding: 12px 20px;
-  background: #eaf3e4;
+  background: #e4ebf3;
   text-align: center;
-  color: #284a34;
-  border-bottom: 1px solid #d3e2ca;
+  color: #1f2328;
+  border-bottom: 1px solid #cad4e2;
   overflow-wrap: anywhere;
 }
 .growth-ticket-button {
@@ -194,31 +194,31 @@
   overflow-wrap: anywhere;
 }
 html[data-theme="dark"] .growth-card {
-  background: #21362b;
-  border-color: #405847;
+  background: #181b1e;
+  border-color: #3d4a5b;
 }
 html[data-theme="dark"] .growth-card :is(input, select, textarea) {
-  background: #182d23;
-  color: #ebf3e7;
-  border-color: #52694d;
+  background: #121518;
+  color: #e7ecf3;
+  border-color: #49596d;
 }
 html[data-theme="dark"]
   :is(.growth-banner, .growth-redeem, .growth-announcement, .growth-message) {
-  background: #2c4534;
-  color: #deedd6;
-  border-color: #52694d;
+  background: #202327;
+  color: #d6e0ed;
+  border-color: #49596d;
 }
 html[data-theme="dark"] .growth-message.staff {
-  background: #345b43;
+  background: #34455b;
 }
 html[data-theme="dark"] :is(.growth-muted, .growth-message small) {
-  color: #b5c9ae;
+  color: #aebac9;
 }
 html[data-theme="dark"] .growth-metric {
-  color: #b2e0b8;
+  color: #b2c6e0;
 }
 html[data-theme="dark"] .growth-row {
-  border-color: #45604b;
+  border-color: #425063;
 }
 @media (max-width: 600px) {
   .growth-card {
@@ -239,3 +239,6 @@ html[data-theme="dark"] .growth-row {
     transition: all 0.4s ease;
   }
 }
+
+/* Message alignment follows the viewer: sent right, received left. */
+.growth-conversation{padding-inline:4px;scrollbar-gutter:stable;grid-template-columns:minmax(0,1fr)}.growth-message{box-sizing:border-box;min-width:0;width:fit-content;max-width:88%}.growth-message.sent{justify-self:end;margin-inline-start:auto;margin-inline-end:0;background:#e0e7f1;border-radius:14px 14px 4px 14px}.growth-message.received{justify-self:start;margin-inline-start:0;margin-inline-end:auto;background:#edf0f5;border-radius:14px 14px 14px 4px}html[data-theme=dark] .growth-message.sent{background:#1f2429}html[data-theme=dark] .growth-message.received{background:#1c1f22}@media(max-width:500px){.growth-message{max-width:92%;padding:12px}}

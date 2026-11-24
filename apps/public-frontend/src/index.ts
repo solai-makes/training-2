@@ -1,3 +1,16 @@
+import "./room-nav.css";
+import {ShopRoom} from "./shop-room.ts";
+import {confirmedOrder} from "../../../packages/ui/src/order-confirmation.ts";
+import {orderProgress} from "./order-progress.ts";
+import {siteFooter} from "../../../packages/ui/src/site-footer.ts";
+import {brandMark,installBrandIcon} from "../../../packages/ui/src/brand-logo.ts";
+import {useCustomerActivity} from "./customer-activity.ts";
+import {BackToTop} from "../../../packages/ui/src/back-to-top.ts";
+import {deliveryFields,deliverySummary} from "../../../packages/ui/src/delivery-preferences.ts";
+import {useRestock} from "./restock.ts";
+import { useSearchSuggestions } from "./search-suggestions.ts";
+import { useShoppingHelper } from "./shopping-helper.ts";
+import { quantityFromText } from "../../../packages/ui/src/checkout-controls.ts";
 import { useCustomerGrowth } from "./store-growth.ts";
 import {
   SUBCATEGORIES,
@@ -60,6 +73,8 @@ import "./style.css";
 import "./offer-countdown.css";
 import "../../../packages/ui/src/theme.css";
 
+import "../../../packages/ui/src/ui-repairs.css";
+
 const icon = (name: string) =>
   h("span", { class: "icon", innerHTML: iconSvg(name) });
 const button = (
@@ -80,10 +95,12 @@ const art = (product: Product, large = false) =>
 const badge = (status: string) =>
   h("span", { class: `badge ${status}` }, status);
 
+installBrandIcon();
 createApp({
   setup() {
     type Page =
       | "shop"
+      | "room"
       | "cart"
       | "checkout"
       | "orders"
@@ -92,7 +109,7 @@ createApp({
       | "tracking"
       | "addresses"
       | "returns"
-      | "compare" | "loyalty" | "support";
+      | "compare" | "loyalty" | "support" | "wishlist" | "notifications";
     const token = ref(sessionStorage.getItem("training2.customer") ?? "");
     const customer = ref(
       sessionStorage.getItem("training2.customerName") ?? "Customer",
@@ -117,6 +134,7 @@ createApp({
       loginOpen = ref(false),
       detail = ref<Product | null>(null),
       cancelTarget = ref<Order | null>(null);
+    const checkoutWorking=ref(false),confirmingOrder=ref(false);
     const lastOrder = ref<Order | null>(null),
       downloading = ref("");
     const trackedOrder = ref<Order | null>(null);
@@ -210,7 +228,14 @@ createApp({
       openTracking,
     );
     const growth = useCustomerGrowth(request,token,cart,catalog,notify,openLogin);
-    const accountLogin = useCustomerLogin(acceptCustomerSession);
+    const suggestions = useSearchSuggestions(catalog, search, (product) => { detail.value = product; }, () => { navigate("shop"); department.value = "All products"; });
+    const restock = useRestock(request,token,catalog,notify,openLogin,p=>{detail.value=p;});
+    const activity = useCustomerActivity(request,token,catalog,{
+      navigate,openProduct:p=>{detail.value=p;},add:p=>{if(p.variants?.length)detail.value=p;else add(p);},
+      openOrder:async id=>{const order:Order=await request(`/orders/${id}/tracking`);openTracking(order);},notify,login:openLogin
+    });
+    const helper = useShoppingHelper(catalog,navigate,(product)=>{detail.value=product;});
+    const accountLogin = useCustomerLogin(acceptCustomerSession,()=>token.value);
     watch(loginOpen, (open) => {
       if (open) void accountLogin.load();
     });
@@ -232,6 +257,8 @@ createApp({
     }
     function navigate(target: Page) {
       page.value = target;
+      if(target==="wishlist") void activity.loadWishlist();
+      if(target==="notifications") void activity.loadNotifications();
       window.location.hash = target;
       error.value = "";
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -239,6 +266,7 @@ createApp({
       if (target === "support") void growth.loadSupport();
       if (target === "loyalty" || target === "checkout") void growth.loadLoyalty();
       if (target === "addresses") void shopping.loadAddresses();
+      if (target === "orders") void restock.load();
       if (target === "returns") void shopping.loadReturns();
       if (target === "checkout") void shopping.prepareCheckout(delivery);
     }
@@ -264,7 +292,8 @@ createApp({
       if (page.value === "cart") navigate("checkout");
       if (page.value === "tracking") void loadTrackedOrder();
       if (page.value === "addresses") void shopping.loadAddresses();
-      if (page.value === "returns") void shopping.loadReturns();
+      if (page.value === "orders") void restock.load();
+        if (page.value === "returns") void shopping.loadReturns();
     }
     function logout(expired = false) {
       const previousToken = token.value;
@@ -288,7 +317,7 @@ createApp({
         name: "",
         address: "",
         city: "",
-        postalCode: "",
+        postalCode: "", deliveryPreference:"standard", deliveryPhone:"", deliveryInstructions:"",
       });
       if (page.value !== "shop") navigate("shop");
       if (expired)
@@ -617,6 +646,14 @@ createApp({
       Math.floor((subtotal.value - discount.value - rewardDiscount.value) * 0.1),
     );
     const total = computed(() => subtotal.value - discount.value - rewardDiscount.value + tax.value);
+    function removeCoupon(clearInput=true) {
+      if(busy.value)return;
+      appliedCoupon.value="";
+      if(clearInput)couponInput.value="";
+      couponError.value="";
+      couponCelebration.value=null;
+      clearTimeout(couponTimer);
+    }
     function applyCoupon() {
       if (busy.value) return;
       const quote = couponQuote(subtotal.value, couponInput.value);
@@ -738,6 +775,10 @@ createApp({
     async function placeOrder(event: Event) {
       event.preventDefault();
       if (busy.value || !cartValid.value) return;
+      const checkoutOwner=token.value;
+      const loadingStarted=performance.now();
+      checkoutWorking.value=true;confirmingOrder.value=true;
+      window.scrollTo({top:0,behavior:"instant"});
       busy.value = true;
       error.value = "";
       try {
@@ -761,6 +802,8 @@ createApp({
           headers: { "Idempotency-Key": checkoutKey },
           body: JSON.stringify(payload),
         });
+        await new Promise<void>(resolve=>setTimeout(resolve,Math.max(0,5000-(performance.now()-loadingStarted))));
+        if(checkoutOwner!==token.value)return;
         if (order.gateway) {
           sessionStorage.setItem("training2.pending-payment", order.id);
           cart.value = [];
@@ -769,6 +812,7 @@ createApp({
           checkoutFingerprint = "";
           navigate("orders");
           await Promise.all([loadCatalog(), loadOrders()]);
+          confirmingOrder.value=false;
           const verified = await launchPayment(order, (result) =>
             request(
               "/payments/" +
@@ -794,10 +838,13 @@ createApp({
           .then((settings) => (paymentSettings.value = settings))
           .catch(() => {});
       } finally {
+        checkoutWorking.value=false;confirmingOrder.value=false;
         busy.value = false;
       }
     }
     async function finishOrder(order: Order) {
+      if(!confirmedOrder(order)){confirmingOrder.value=false;navigate("orders");notify("Your order is processing. Check Your orders for updates.");return;}
+      confirmingOrder.value=false;
       lastOrder.value = order;
       cart.value = [];
       remember();
@@ -812,7 +859,8 @@ createApp({
             ? "Demo completed. No money charged; receipt ready."
             : "Payment verified. Your receipt is ready.",
       );
-      await Promise.all([loadCatalog(), loadOrders()]);
+      void Promise.allSettled([loadCatalog(),loadOrders(),activity.loadNotifications()]);
+
     }
     async function refreshPayment(order: Order) {
       if (busy.value) return;
@@ -907,9 +955,7 @@ createApp({
         const result = await request(`/orders/${order.id}/confirm`, {
           method: "POST",
         });
-        lastOrder.value = result;
-        navigate("success");
-        await Promise.all([loadCatalog(), loadOrders()]);
+        await finishOrder(result);
       } catch (failure) {
         error.value = (failure as Error).message;
       } finally {
@@ -917,14 +963,16 @@ createApp({
       }
     }
     async function pdf(order: Order) {
-      if (downloading.value) return;
+      if (downloading.value) return false;
       downloading.value = order.id;
       try {
         const saved: Receipt = await request(`/orders/${order.id}/receipt`);
         await downloadReceipt(saved);
-        notify("Your PDF receipt has been downloaded.");
+        notify("Your PDF receipt is ready. Check your downloads.");
+        return true;
       } catch (failure) {
         error.value = (failure as Error).message;
+        return false;
       } finally {
         downloading.value = "";
       }
@@ -991,17 +1039,19 @@ createApp({
       }
       if (
         [
-          "shop",
+          "shop", "room",
           "cart",
           "checkout",
           "orders",
           "addresses",
           "returns",
           "compare",
-          "track-reference", "loyalty", "support",
+          "track-reference", "loyalty", "support", "wishlist", "notifications",
         ].includes(target)
       ) {
         page.value = target as Page;
+        if(target==="wishlist") void activity.loadWishlist();
+        if(target==="notifications") void activity.loadNotifications();
         if (target === "support") void growth.loadSupport();
         if (target === "loyalty") void growth.loadLoyalty();
         if (target === "addresses") void shopping.loadAddresses();
@@ -1009,7 +1059,12 @@ createApp({
         if (target === "checkout") void shopping.prepareCheckout(delivery);
       }
     }
+    let layoutObserver:ResizeObserver|undefined;
+    function syncLayout(){const height=document.querySelector(".shop-header")?.getBoundingClientRect().height ?? 118;document.documentElement.style.setProperty("--shop-header-height",`${height}px`);document.querySelectorAll<HTMLElement>(".summary").forEach(panel=>{panel.dataset.tall=String(panel.scrollHeight>window.innerHeight-height-32);});}
+    function bindLayout(){layoutObserver?.disconnect();const header=document.querySelector(".shop-header"),summary=document.querySelector(".summary");if(header)layoutObserver?.observe(header);if(summary)layoutObserver?.observe(summary);syncLayout();}
+    watch([page,language],()=>void nextTick(bindLayout));
     onMounted(() => {
+      layoutObserver=new ResizeObserver(syncLayout);bindLayout();window.addEventListener("resize",syncLayout);
       void growth.loadSettings();
       clockTimer = setInterval(() => {
         const previous = clockNow.value;
@@ -1047,6 +1102,7 @@ createApp({
       document.addEventListener("keydown", keyboard);
     });
     onBeforeUnmount(() => {
+      layoutObserver?.disconnect();window.removeEventListener("resize",syncLayout);
       clearInterval(poll);
       clearInterval(clockTimer);
       clearTimeout(toastTimer);
@@ -1229,6 +1285,7 @@ createApp({
               disabled: busy.value,
               onInput: (event: Event) => {
                 couponInput.value = (event.target as HTMLInputElement).value;
+                if(appliedCoupon.value && couponInput.value.trim().toLowerCase()!==appliedCoupon.value)removeCoupon(false);
                 couponError.value = "";
               },
               onKeydown: (event: KeyboardEvent) => {
@@ -1288,8 +1345,7 @@ createApp({
                 button(
                   "Remove",
                   () => {
-                    appliedCoupon.value = "";
-                    couponCelebration.value = null;
+                    removeCoupon();
                   },
                   "text",
                   busy.value,
@@ -1307,22 +1363,22 @@ createApp({
         discount.value > 0
           ? h("div", { class: "summary-line coupon-savings" }, [
               h("span", `Coupon (${coupon.value.percent}%)`),
-              h("strong", `−${money(discount.value)}`),
+              h("strong", `- ${money(discount.value)}`),
             ])
           : null,
-        growth.redeem(subtotal.value-discount.value),
-        rewardDiscount.value>0?h("div",{class:"summary-line coupon-savings"},[h("span","Loyalty points"),h("strong",`−${money(rewardDiscount.value)}`)]):null,
+        growth.redeem(subtotal.value-discount.value,busy.value),
+        rewardDiscount.value>0?h("div",{class:"summary-line coupon-savings"},[h("span","Loyalty points"),h("strong",`- ${money(rewardDiscount.value)}`)]):null,
         h("div", { class: "summary-line" }, [
           h("span", "Estimated tax (10%)"),
-          h("span", money(tax.value)),
+          h("span", `+ ${money(tax.value)}`),
         ]),
         h("div", { class: "summary-line" }, [
           h("span", "Delivery"),
-          h("strong", { class: "green" }, "Free"),
+          h("strong", { class: "green" }, [`+ ${money(0)}`,h("small",{class:"bill-free"},"Free")]),
         ]),
         h("div", { class: "summary-total" }, [
           h("span", "Total"),
-          h("strong", money(total.value)),
+          h("strong", `= ${money(total.value)}`),
         ]),
         checkout
           ? h(
@@ -1368,18 +1424,21 @@ createApp({
           : null,
       ]);
     }
+    const quantityDraft = reactive<Record<string,string>>({});
     function quantityControl(item: CartItem, product: Product) {
+      const maximum = Math.min(product.stock,1000);
+      const commit = () => { const result=quantityFromText(quantityDraft[item.productId] ?? String(item.quantity),item.quantity,maximum);if(result.invalid)notify("Enter a whole-number quantity.");else { quantity(item.productId,result.quantity);if(result.adjusted)notify(`Quantity adjusted to ${result.quantity} for current stock.`); } delete quantityDraft[item.productId]; };
       return h("div", { class: "quantity" }, [
         button(
           "−",
-          () => quantity(item.productId, item.quantity - 1),
+          () => {delete quantityDraft[item.productId];quantity(item.productId, item.quantity - 1);},
           "plain",
-          busy.value,
+          busy.value || item.quantity <= 1,
         ),
-        h("span", String(item.quantity)),
+        h("input",{class:"quantity-input",type:"number",inputmode:"numeric",min:1,max:maximum,step:1,value:quantityDraft[item.productId] ?? String(item.quantity),disabled:busy.value || maximum<1,"aria-label":`Quantity for ${product.name}`,title:`Maximum quantity: ${maximum}`,onInput:(event:Event)=>quantityDraft[item.productId]=(event.target as HTMLInputElement).value,onChange:commit,onBlur:commit,onKeydown:(event:KeyboardEvent)=>{if(event.key === "Enter"){event.preventDefault();(event.target as HTMLInputElement).blur();}}}),
         button(
           "+",
-          () => quantity(item.productId, item.quantity + 1),
+          () => {delete quantityDraft[item.productId];quantity(item.productId, item.quantity + 1);},
           "plain",
           busy.value || item.quantity >= Math.min(product.stock, 1000),
         ),
@@ -1387,18 +1446,6 @@ createApp({
     }
     function shop() {
       return [
-        !search.value && department.value === "All products"
-          ? h(ShopHero, {
-              onExplore: (value: string) => {
-                department.value = value;
-                void nextTick(() =>
-                  document
-                    .getElementById("collection")
-                    ?.scrollIntoView({ behavior: "smooth" }),
-                );
-              },
-            })
-          : null,
         h(
           "div",
           { class: "benefits" },
@@ -1681,7 +1728,8 @@ createApp({
                                 )
                               : null,
                           ]),
-                          shopping.compareButton(p),
+                          h("div",{class:"product-tools"},[shopping.compareButton(p),activity.wishlistButton(p)]),
+                          familyStock(p)===0 ? restock.button(p) : null,
                           offerTimer(p),
                           h("div", { class: "product-bottom" }, [
                             h("div", [
@@ -1870,6 +1918,7 @@ createApp({
                   "Delivery details",
                 ]),
                 shopping.addressPicker(delivery),
+                deliveryFields(delivery),
                 ...(
                   [
                     ["name", "Full name", "Your full name", 100],
@@ -2086,6 +2135,8 @@ createApp({
                     busy.value,
                   )
                 : null,
+            order.receipt?.tracking?.stage === "delivered" ? button("Request a return", () => { shopping.selectReturn(order.id); navigate("returns"); }, "secondary") : null,
+            deliverySummary(order.receipt?.recipient) ? h("p",{class:"delivery-instructions"},deliverySummary(order.receipt?.recipient)) : null,
             order.status !== "cancelled" &&
             !["shipped", "out_for_delivery", "delivered"].includes(
               order.receipt?.tracking?.stage ?? "",
@@ -2109,6 +2160,7 @@ createApp({
     }
     function orderPageView() {
       return [
+        restock.panel(),
         h("div", { class: "page-heading" }, [
           h("span", { class: "eyebrow" }, "YOUR ACCOUNT"),
           h("h1", "Your orders"),
@@ -2181,6 +2233,7 @@ createApp({
                 `Order #${order.id.slice(0, 8).toUpperCase()}`,
               )
             : null,
+          h("p",{class:"receipt-download-note",role:"status"},downloading.value ? "Preparing your PDF receipt…" : "Click Download PDF receipt to save your bill."),
           h("div", { class: "success-actions" }, [
             order
               ? button(
@@ -2359,6 +2412,8 @@ createApp({
                               ),
                             ])
                           : null,
+                        activity.wishlistButton(currentProduct,false),
+                        restock.button(currentProduct),
                         offerTimer(currentProduct),
                         h(
                           "p",
@@ -2465,7 +2520,7 @@ createApp({
                 "aria-label": "Solaistore home",
               },
               [
-                h("span", { class: "brand-mark" }, growth.settings.value.name[0]),
+                brandMark(),
                 h("span", growth.settings.value.name),
               ],
             ),
@@ -2473,8 +2528,10 @@ createApp({
               "form",
               {
                 class: "search-box",
+                onFocusout: (e: FocusEvent) => { if (!(e.currentTarget as HTMLElement).contains(e.relatedTarget as Node | null)) suggestions.close(); },
                 onSubmit: (e: Event) => {
                   e.preventDefault();
+                  suggestions.submit();
                   navigate("shop");
                   document
                     .getElementById("collection")
@@ -2487,8 +2544,17 @@ createApp({
                   value: search.value,
                   placeholder: "Search for your next good find…",
                   "aria-label": "Search products",
+                  role: "combobox",
+                  "aria-autocomplete": "list",
+                  "aria-expanded": suggestions.visible.value,
+                  "aria-controls": "product-search-suggestions",
+                  "aria-activedescendant": suggestions.active.value >= 0 ? `search-suggestion-${suggestions.active.value}` : undefined,
+                  autocomplete: "off",
+                  onFocus: suggestions.open,
+                  onKeydown: suggestions.keydown,
                   onInput: (e: Event) => {
                     search.value = (e.target as HTMLInputElement).value;
+                    suggestions.open();
                     if (page.value !== "shop") navigate("shop");
                   },
                 }),
@@ -2499,16 +2565,18 @@ createApp({
                         type: "button",
                         class: "icon-button",
                         "aria-label": "Clear search",
-                        onClick: () => (search.value = ""),
+                        onClick: () => { search.value = ""; suggestions.close(); },
                       },
                       icon("close"),
                     )
                   : null,
+                suggestions.render(),
               ],
             ),
             h("div", { class: "header-actions" }, [
               languageSelect(),
               themeToggle(),
+              activity.notificationBell(),
               h(
                 "button",
                 {
@@ -2595,7 +2663,7 @@ createApp({
           ],
         ),
         growth.settings.value.announcement ? h("div",{class:"growth-announcement"},growth.settings.value.announcement):null,
-        h("main", { id: "main", class: "shop-main" }, [
+        h("main", { id: "main",tabindex:-1, class: "shop-main" }, [
           !online.value
             ? h("div", { class: "connection-banner", role: "status" }, [
                 "Stock updates are paused. Displayed quantities may be out of date. ",
@@ -2620,6 +2688,9 @@ createApp({
                 () => navigate("orders"),
                 "secondary small",
               ),
+              button("Wishlist",()=>navigate("wishlist"),"secondary small"),
+              button("Shop the room",()=>navigate("room"),`secondary small room-nav ${page.value==="room"?"room-nav-active":""}`),
+              token.value.startsWith("ss_") ? button("Account password",openLogin,"secondary small") : null,
               button("Loyalty rewards",()=>navigate("loyalty"),"secondary small"),
               button("Customer support",()=>navigate("support"),"secondary small"),
               button(
@@ -2644,10 +2715,19 @@ createApp({
               ),
             ],
           ),
+          page.value==="shop"&&department.value==="All products"&&!search.value&&!checkoutWorking.value&&!confirmingOrder.value ? h(ShopHero, {
+            key:"customer-wide-banner",
+            onExplore:(value:string)=>{
+              clearCatalogFilters();
+              department.value=value;
+              navigate("shop");
+              void nextTick(()=>document.getElementById("collection")?.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"}));
+            },
+          }) : null,
           growth.cartBanner(),
-          ...(page.value === "support" ? growth.supportPage() : page.value === "loyalty" ? growth.loyaltyPage() : page.value === "track-reference"
+          ...(confirmingOrder.value ? orderProgress() : page.value === "wishlist" ? activity.wishlistPage() : page.value === "notifications" ? activity.notificationsPage() : page.value === "support" ? growth.supportPage() : page.value === "loyalty" ? growth.loyaltyPage() : page.value === "track-reference"
             ? referenceTracking.page()
-            : page.value === "shop"
+            : page.value === "room" ? [h(ShopRoom,{products:catalog.value,onAdd:add,onView:(p:Product)=>detail.value=p})] : page.value === "shop"
               ? shop()
               : page.value === "cart"
                 ? cartPage()
@@ -2678,31 +2758,17 @@ createApp({
                               })
                             : success()),
         ]),
-        h("footer", { class: "shop-footer" }, [
-          h("div", [
-            h("strong", growth.settings.value.name),
-            h("p", growth.settings.value.tagline),
-          ]),
-          h("span", "A local training store · JPY"),
-          button(
-            "Staff workspace",
-            () => {
-              const url = new URL(location.href);
-              url.port = "5174";
-              url.pathname = "/";
-              url.hash = "";
-              url.search = `?lang=${language.value}`;
-              location.assign(url.href);
-            },
-            "text",
-          ),
-        ]),
+        siteFooter({settings:growth.settings.value,onNavigate:target=>{if(target==="shop")clearCatalogFilters();navigate(target);},onStaff:()=>{
+          const url=new URL(location.href);url.port="5174";url.pathname="/";url.hash="";url.search=`?lang=${language.value}`;location.assign(url.href);
+        }}),
         notice.value
           ? h("div", { class: "toast", role: "status" }, [
               icon("check"),
               notice.value,
             ])
           : null,
+        h(BackToTop,{customer:true,hidden:loginOpen.value||!!detail.value||!!cancelTarget.value||!!couponCelebration.value}),
+        helper.render(page.value === "cart" || page.value === "checkout" || loginOpen.value || !!detail.value || !!cancelTarget.value || !!couponCelebration.value || !!notice.value),
         couponCelebration.value
           ? h(
               "dialog",

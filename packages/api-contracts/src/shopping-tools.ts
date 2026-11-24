@@ -1,15 +1,9 @@
+import {Recipient} from "./index.ts";
 import { z } from "@hono/zod-openapi";
 export const AddressInput = z
   .object({
     label: z.string().trim().min(1).max(40),
-    recipient: z
-      .object({
-        name: z.string().trim().min(1).max(100),
-        address: z.string().trim().min(1).max(200),
-        city: z.string().trim().min(1).max(100),
-        postalCode: z.string().trim().min(1).max(30),
-      })
-      .strict(),
+    recipient: Recipient,
     isDefault: z.boolean().default(false),
   })
   .strict();

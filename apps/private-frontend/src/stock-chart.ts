@@ -1,3 +1,4 @@
+import {AnimatedNumber} from "../../../packages/ui/src/animated-number.ts";
 import { h, locale } from "../../../packages/ui/src/language.ts";
 import type { Product } from "../../../packages/ui/src/storefront.ts";
 export type StockReport = {
@@ -86,7 +87,7 @@ export function stockCharts(
       ].map(([label, n, kind]) =>
         h("div", { class: String(kind) }, [
           h("span", String(label)),
-          h("strong", Number(n).toLocaleString(locale())),
+          h(AnimatedNumber,{value:Number(n)}),
         ]),
       ),
     ),

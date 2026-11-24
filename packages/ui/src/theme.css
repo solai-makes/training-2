@@ -1,5 +1,5 @@
 .theme-toggle {
-  border: 1px solid #98aa9d;
+  border: 1px solid #8e9eb4;
   border-radius: 30px;
   background: transparent;
   padding: 9px 13px;
@@ -10,20 +10,20 @@
   white-space: nowrap;
 }
 html[data-theme="dark"] {
-  --ink: #e4eee8;
-  --muted: #afc0b6;
-  --line: #35483f;
-  --paper: #14221d;
-  --green: #70d9ad;
-  background: #101b17;
-  color: #e4eee8;
+  --ink: #e4e8ee;
+  --muted: #a9b6c6;
+  --line: #24262a;
+  --paper: #0f1013;
+  --green: #709dd9;
+  background: #0c0d0f;
+  color: #e4e8ee;
 }
 html[data-theme="dark"] body {
-  background: #101b17;
-  color: #e4eee8;
+  background: #0c0d0f;
+  color: #e4e8ee;
 }
 html[data-theme="dark"] :is(.staff-app, .main-content, .storefront) {
-  background: #101b17;
+  background: #0c0d0f;
 }
 html[data-theme="dark"]
   :is(
@@ -44,9 +44,9 @@ html[data-theme="dark"]
     .dropdown,
     .login-card
   ) {
-  background: #192a23;
-  color: #e4eee8;
-  border-color: #364b40;
+  background: #121417;
+  color: #e4e8ee;
+  border-color: #25282b;
 }
 html[data-theme="dark"]
   :is(
@@ -66,11 +66,11 @@ html[data-theme="dark"]
     .section-heading,
     .product-name
   ) {
-  color: #e4eee8;
+  color: #e4e8ee;
 }
 html[data-theme="dark"]
   :is(.muted, small, .fine-print, .product-category, .stock-line, .nav-item) {
-  color: #afc0b6;
+  color: #a9b6c6;
 }
 html[data-theme="dark"]
   :is(
@@ -83,9 +83,9 @@ html[data-theme="dark"]
     .btn.secondary,
     .btn.plain
   ) {
-  background: #20352c;
-  color: #e4eee8;
-  border-color: #51685c;
+  background: #171a1d;
+  color: #e4e8ee;
+  border-color: #4a5a6f;
 }
 html[data-theme="dark"]
   :is(
@@ -96,20 +96,20 @@ html[data-theme="dark"]
     .order-header,
     .success-banner
   ) {
-  background: #20352c;
-  color: #e4eee8;
+  background: #171a1d;
+  color: #e4e8ee;
 }
 html[data-theme="dark"] :is(td, th, .summary-line, .summary-total) {
-  border-color: #364b40;
+  border-color: #25282b;
 }
 html[data-theme="dark"] .coupon-error {
   color: #ffabb3;
 }
 html[data-theme="dark"] :is(.coupon-savings, .green) {
-  color: #83e9b7;
+  color: #83afe9;
 }
 html[data-theme="dark"] .coupon-celebration :is(strong, small) {
-  color: #143c2c;
+  color: #13181e;
 }
 .advanced-filters {
   display: flex;
@@ -142,21 +142,21 @@ html[data-theme="dark"] .coupon-celebration :is(strong, small) {
 .tracking-step {
   padding: 7px 12px;
   border-radius: 20px;
-  background: #edf1ee;
-  color: #53655b;
+  background: #eceff2;
+  color: #4a5a6e;
   font-size: 0.8rem;
 }
 .tracking-step.complete {
-  background: #d5f2e2;
-  color: #155a38;
+  background: #d5e2f2;
+  color: #19212c;
 }
 html[data-theme="dark"] .tracking-step {
-  background: #294236;
-  color: #bdcfc3;
+  background: #1e2125;
+  color: #bbc4d1;
 }
 html[data-theme="dark"] .tracking-step.complete {
-  background: #296046;
-  color: #dbffeb;
+  background: #232932;
+  color: #dfebfb;
 }
 html[data-theme="dark"]
   :is(
@@ -169,9 +169,9 @@ html[data-theme="dark"]
     .stat-card,
     .analytics-panel
   ) {
-  background: #192a23;
-  color: #e4eee8;
-  border-color: #364b40;
+  background: #121417;
+  color: #e4e8ee;
+  border-color: #25282b;
 }
 html[data-theme="dark"]
   :is(
@@ -185,19 +185,19 @@ html[data-theme="dark"]
     .department-nav button,
     .search-box .icon
   ) {
-  color: #e4eee8;
+  color: #e4e8ee;
 }
 html[data-theme="dark"] .coupon-box small {
-  color: #b8d0c1;
+  color: #b8c2d0;
 }
 html[data-theme="dark"] .btn.primary {
-  color: #173c2c;
+  color: #15191f;
 }
 html[data-theme="dark"]
   :is(.workspace-header, .sidebar-help, .staff-login-form, .sales-donut > div) {
-  background: #192a23;
-  color: #e4eee8;
-  border-color: #364b40;
+  background: #121417;
+  color: #e4e8ee;
+  border-color: #25282b;
 }
 html[data-theme="dark"]
   :is(
@@ -210,12 +210,12 @@ html[data-theme="dark"]
     .btn.text,
     .sidebar nav > button
   ) {
-  color: #bbd0c1;
+  color: #bac4d1;
 }
 html[data-theme="dark"] .sidebar nav > button.selected {
-  background: #345b45;
+  background: #34455b;
   color: #fff;
 }
 html[data-theme="dark"] :is(.revenue-chart, .stock-chart) text {
-  fill: #bbd0c1;
+  fill: #bac4d1;
 }

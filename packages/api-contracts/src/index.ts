@@ -132,8 +132,12 @@ export const Recipient = z
     address: z.string().trim().min(1).max(200),
     city: z.string().trim().min(1).max(100),
     postalCode: z.string().trim().min(1).max(30),
+    deliveryPreference: z.enum(["standard","call","reception","door","custom"]).optional(),
+    deliveryPhone: z.string().trim().max(30).regex(/^[+0-9 ()-]*$/).optional(),
+    deliveryInstructions: z.string().trim().max(400).optional(),
   })
   .strict()
+  .refine(value => value.deliveryPreference !== "call" || (value.deliveryPhone ?? "").replace(/\D/g, "").length >= 7, { message: "Add a delivery phone number for call-before-delivery.", path: ["deliveryPhone"] })
   .openapi("Recipient");
 export const CheckoutInput = z
   .object({
@@ -181,7 +185,8 @@ export const SavedReceipt = z
           "out_for_delivery",
           "delivered",
         ]),
-        mode: z.literal("automatic_demo").optional(),
+        mode: z.enum(["automatic_demo","staff_dispatch"]).optional(),
+        awaitingPartner: z.boolean().optional(),
         expectedDeliveryAt: z.iso.datetime().optional(),
         nextUpdateAt: z.iso.datetime().nullable().optional(),
         history: z.array(z.object({ stage: z.string(), at: z.iso.datetime() })),

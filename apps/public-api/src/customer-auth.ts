@@ -1,3 +1,6 @@
+import {bodyLimit} from "hono/body-limit";
+import type {Context} from "hono";
+import {hashPassword,verifyPassword} from "./password-hash.ts";
 import { createHash, randomBytes } from "node:crypto";
 import { Hono } from "hono";
 import { z } from "@hono/zod-openapi";
@@ -10,6 +13,7 @@ import {
   sendVerification,
 } from "./otp-provider.ts";
 export const customerAuth = new Hono();
+customerAuth.use("*",bodyLimit({maxSize:4096}));
 const hash = (s: string) => createHash("sha256").update(s).digest("hex");
 export async function customerSession(token: string) {
   if (!/^ss_[a-f0-9]{64}$/.test(token)) return null;
@@ -173,3 +177,59 @@ customerAuth.get("/me", async (c) => {
   });
 });
 
+
+// Email/password accounts share the existing customer identity and private data.
+const passwordInput=z.string().min(8).max(128).refine(value=>Buffer.byteLength(value,'utf8')<=256);
+const emailInput=z.email().max(254).transform(value=>value.toLowerCase());
+async function passwordLimit(c:Context,identifier:string,registration=false){
+ let ip='local';try{ip=getConnInfo(c).remote.address??'local';}catch{}
+ await limit('password-global',200,60);
+ await limit((registration?'password-register-ip-':'password-login-ip-')+hash(ip),registration?10:40,registration?3600:900);
+ await limit((registration?'password-register-email-':'password-login-email-')+hash(identifier),registration?5:15,900);
+}
+customerAuth.post('/register',async c=>{
+ const input=z.object({email:emailInput,name:z.string().trim().min(1).max(100),password:passwordInput}).strict().safeParse(await c.req.json().catch(()=>null));
+ if(!input.success)throw new StoreError(400,'INVALID_INPUT','Enter your name, a valid email and a password of 8–128 characters.');
+ const {email,name,password}=input.data;await passwordLimit(c,email,true);
+ const passwordHash=await hashPassword(password);
+ const profile=await db.$transaction(async tx=>{
+  const rows=await tx.$queryRaw<Array<{id:string;name:string}>>`INSERT INTO store_customer_profiles(channel,identifier,name,verified_at) VALUES('email',${email},${name},NULL) ON CONFLICT(channel,identifier) DO NOTHING RETURNING id,name`;
+  if(!rows.length)throw new StoreError(409,'ACCOUNT_EXISTS','An account already uses this email. Sign in with its password. Existing email accounts can set a password while signed in.');
+  await tx.$executeRaw`INSERT INTO store_customer_passwords(customer_id,password_hash) VALUES(${rows[0].id}::uuid,${passwordHash})`;
+  return rows[0];
+ });
+ return c.json(await session(profile.id,profile.name,false),201);
+});
+customerAuth.post('/login',async c=>{
+ const input=z.object({email:emailInput,password:z.string().min(1).max(128)}).strict().safeParse(await c.req.json().catch(()=>null));
+ if(!input.success)throw new StoreError(400,'INVALID_INPUT','Enter your email and password.');
+ const {email,password}=input.data;await passwordLimit(c,email);
+ const rows=await db.$queryRaw<Array<{id:string;name:string;password_hash:string}>>`SELECT p.id,p.name,w.password_hash FROM store_customer_profiles p JOIN store_customer_passwords w ON w.customer_id=p.id WHERE p.channel='email' AND p.identifier=${email}`;
+ if(!await verifyPassword(password,rows[0]?.password_hash??null))throw new StoreError(401,'INVALID_CREDENTIALS','Incorrect email or password.');
+ return c.json(await session(rows[0].id,rows[0].name,false));
+});
+customerAuth.get('/password/status',async c=>{
+ const identity=await customerSession(c.req.header('Authorization')?.replace(/^Bearer /,'')??'');
+ if(!identity||identity.guest)throw new StoreError(401,'UNAUTHENTICATED','Sign in to an email account to manage your password.');
+ const rows=await db.$queryRaw<Array<{identifier:string;has_password:boolean}>>`SELECT p.identifier,(w.customer_id IS NOT NULL) AS has_password FROM store_customer_profiles p LEFT JOIN store_customer_passwords w ON w.customer_id=p.id WHERE p.id::text=${identity.sub} AND p.channel='email'`;
+ if(!rows.length)throw new StoreError(400,'EMAIL_ACCOUNT_REQUIRED','Password settings are available for email accounts.');
+ return c.json({email:rows[0].identifier,hasPassword:rows[0].has_password});
+});
+customerAuth.post('/password/set',async c=>{
+ const rawToken=c.req.header('Authorization')?.replace(/^Bearer /,'')??'';
+ const identity=await customerSession(rawToken);
+ if(!identity||identity.guest)throw new StoreError(401,'UNAUTHENTICATED','Sign in to an email account to manage your password.');
+ const input=z.object({password:passwordInput,currentPassword:z.string().max(128).optional()}).strict().safeParse(await c.req.json().catch(()=>null));
+ if(!input.success)throw new StoreError(400,'INVALID_INPUT','Use a password of 8–128 characters.');
+ await passwordLimit(c,identity.sub);
+ const passwordHash=await hashPassword(input.data.password);
+ await db.$transaction(async tx=>{
+  const profiles=await tx.$queryRaw<Array<{id:string}>>`SELECT id FROM store_customer_profiles WHERE id::text=${identity.sub} AND channel='email' FOR UPDATE`;
+  if(!profiles.length)throw new StoreError(400,'EMAIL_ACCOUNT_REQUIRED','Password settings are available for email accounts.');
+  const rows=await tx.$queryRaw<Array<{password_hash:string}>>`SELECT password_hash FROM store_customer_passwords WHERE customer_id::text=${identity.sub}`;
+  if(rows.length&&!await verifyPassword(input.data.currentPassword??'',rows[0].password_hash))throw new StoreError(401,'INVALID_CREDENTIALS','Current password is incorrect.');
+  await tx.$executeRaw`INSERT INTO store_customer_passwords(customer_id,password_hash) VALUES(${identity.sub}::uuid,${passwordHash}) ON CONFLICT(customer_id) DO UPDATE SET password_hash=excluded.password_hash,updated_at=now()`;
+  await tx.$executeRaw`DELETE FROM store_customer_sessions WHERE customer_id=${identity.sub} AND token_hash<>${hash(rawToken)}`;
+ });
+ return c.json({ok:true});
+});

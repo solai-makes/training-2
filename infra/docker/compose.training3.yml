@@ -1,0 +1,52 @@
+name: solaistore-training3
+services:
+  db:
+    image: postgres:17.6-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: local-training3-only
+      POSTGRES_DB: training3
+    volumes: [training3-db:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U postgres -d training3']
+      interval: 3s
+      timeout: 3s
+      retries: 30
+  cognito-local:
+    image: jagregory/cognito-local:latest
+    entrypoint: ["sh", "-c", "cp /seed-config.json /app/.cognito/config.json; exec node /app/start.js"]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:9229').then(()=>process.exit(0)).catch(()=>process.exit(1))"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+    volumes:
+      - training3-cognito:/app/.cognito
+      - ../../.devcontainer/cognito/config.json:/seed-config.json:ro
+  app:
+    image: ${SOLAISTORE_IMAGE:-ghcr.io/solai-makes/training-2:training3}
+    ports: ['5183:8080','5184:8081']
+    environment:
+      DATABASE_URL: postgresql://postgres:local-training3-only@db:5432/training3
+      COGNITO_LOCAL_ENDPOINT: http://cognito-local:9229
+      COGNITO_ISSUER_DOMAIN: http://localhost:9229
+      AWS_ACCESS_KEY_ID: local
+      AWS_SECRET_ACCESS_KEY: local
+      AWS_DEFAULT_REGION: local
+      PUBLIC_API_PORT: '3000'
+      PRIVATE_API_PORT: '3001'
+    healthcheck:
+      test: ["CMD", "node", "-e", "Promise.all([3000,3001].map(port=>fetch('http://127.0.0.1:'+port+'/health').then(response=>{if(!response.ok)throw Error('starting')}))).then(()=>process.exit(0)).catch(()=>process.exit(1))"]
+      interval: 3s
+      timeout: 5s
+      retries: 60
+      start_period: 20s
+    volumes: [training3-config:/app/.local]
+    depends_on:
+      db: {condition: service_healthy}
+      cognito-local: {condition: service_healthy}
+volumes:
+  training3-db:
+  training3-cognito:
+  training3-config:
+

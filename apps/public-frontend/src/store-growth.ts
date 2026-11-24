@@ -1,9 +1,10 @@
+import { pointsFromText } from "../../../packages/ui/src/checkout-controls.ts";
 import { computed, onBeforeUnmount, reactive, ref, watch, type Ref } from "vue";
 import {
   DEFAULT_SETTINGS,
   loyaltyDiscount,
   type Settings,
-} from "../../../packages/api-contracts/src/store-growth.ts";
+} from "../../../packages/api-contracts/src/growth-policy.ts";
 import { h } from "../../../packages/ui/src/language.ts";
 import {
   date,
@@ -60,6 +61,8 @@ export function useCustomerGrowth(
     offeredCart = ref<Saved | null>(null),
     cartReady = ref(false),
     cartVersion = ref(0);
+  const pointsDraft = ref("0"),
+    pointsError = ref("");
   const support = ref<Ticket[]>([]),
     selectedTicket = ref(""),
     reply = ref(""),
@@ -72,14 +75,17 @@ export function useCustomerGrowth(
     loyaltyLoading = false;
   const json = <T>(path: string, options?: RequestInit) =>
     request(path, options) as Promise<T>;
-  let settingsLoadedAt=0;
+  let settingsLoadedAt = 0;
   async function loadSettings() {
-    if(Date.now()-settingsLoadedAt<30000)return;
+    if (Date.now() - settingsLoadedAt < 30000) return;
     try {
       const response = await fetch("/api/store/settings", {
         signal: AbortSignal.timeout(10000),
       });
-      if (response.ok) { settings.value = (await response.json()).settings;settingsLoadedAt=Date.now(); }
+      if (response.ok) {
+        settings.value = (await response.json()).settings;
+        settingsLoadedAt = Date.now();
+      }
     } catch {
       /* Keep the last known public store details. */
     }
@@ -128,6 +134,8 @@ export function useCustomerGrowth(
     offeredCart.value = null;
     loyalty.value = null;
     requestedPoints.value = 0;
+    pointsDraft.value = "0";
+    pointsError.value = "";
     support.value = [];
     selectedTicket.value = "";
     reply.value = "";
@@ -311,40 +319,134 @@ export function useCustomerGrowth(
           ])
         : null;
   }
-  function redeem(net: number) {
+  function redeem(net: number, locked = false) {
     if (!eligible.value || !loyalty.value) return null;
     const rules = loyalty.value.rules;
-    return h("section", { class: "growth-redeem" }, [
-      h("label", { for: "loyalty-points-input" }, "Use loyalty points"),
-      h(
-        "p",
-        { class: "growth-muted" },
-        `${loyalty.value.available} points available · 1 point = ${money(rules.loyaltyYenPerPoint)} · up to ${rules.loyaltyMaxPercent}% of products after coupons.`,
-      ),
-      h("input", {
-        id: "loyalty-points-input",
-        type: "number",
-        min: 0,
-        max: Math.min(
-          loyalty.value.available,
-          loyaltyDiscount(0, loyalty.value.available, net, rules).maxPoints,
+    const maximum = Math.min(
+      loyalty.value.available,
+      loyaltyDiscount(0, loyalty.value.available, Math.max(0, net), rules)
+        .maxPoints,
+      100000000,
+    );
+    const disabled = locked || !rules.loyaltyEnabled;
+    const apply = () => {
+      const value = pointsFromText(pointsDraft.value, maximum);
+      if (value === null) {
+        pointsError.value = `Enter a whole number from 0 to ${maximum}.`;
+        return;
+      }
+      requestedPoints.value = value;
+      pointsDraft.value = String(value);
+      pointsError.value = "";
+    };
+    return h(
+      "section",
+      { class: "growth-redeem", "aria-labelledby": "points-panel-title" },
+      [
+        h("div", { class: "points-heading" }, [
+          h("h3", { id: "points-panel-title" }, "Save with loyalty points"),
+          h(
+            "span",
+            { class: "points-balance" },
+            loyalty.value.available + " points available",
+          ),
+        ]),
+        h(
+          "p",
+          { class: "points-rate" },
+          `1 point = ${money(rules.loyaltyYenPerPoint)} off`,
         ),
-        step: 1,
-        value: pointsToUse(net),
-        disabled: !rules.loyaltyEnabled,
-        onInput: (e: Event) =>
-          (requestedPoints.value = Math.max(
-            0,
-            Math.floor(Number((e.target as HTMLInputElement).value)) || 0,
-          )),
-      }),
-      discount(net) > 0
-        ? h("p", `Loyalty savings: ${money(discount(net))}`)
-        : null,
-      !rules.loyaltyEnabled
-        ? h("p", "Loyalty earning and redemption are currently paused.")
-        : null,
-    ]);
+        h(
+          "p",
+          { class: "points-limit", id: "points-order-limit" },
+          `This order: use up to ${maximum} points to save ${money(maximum * rules.loyaltyYenPerPoint)}.`,
+        ),
+        h("div", { class: "points-controls" }, [
+          h("label", { for: "loyalty-points-input" }, [
+            "Points to use",
+            h("input", {
+              id: "loyalty-points-input",
+              type: "number",
+              inputmode: "numeric",
+              min: 0,
+              max: maximum,
+              step: 1,
+              value: pointsDraft.value,
+              disabled,
+              "aria-describedby": "points-order-limit",
+              "aria-invalid": !!pointsError.value,
+              onInput: (e: Event) => {
+                pointsDraft.value = (e.target as HTMLInputElement).value;
+                pointsError.value = "";
+              },
+              onKeydown: (event: KeyboardEvent) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  apply();
+                }
+              },
+            }),
+          ]),
+          h(
+            "button",
+            { type: "button", class: "btn primary", disabled, onClick: apply },
+            "Apply points",
+          ),
+        ]),
+        h("div", { class: "points-quick-actions" }, [
+          h(
+            "button",
+            {
+              type: "button",
+              disabled,
+              onClick: () => {
+                requestedPoints.value = maximum;
+                pointsDraft.value = String(maximum);
+                pointsError.value = "";
+              },
+            },
+            "Use maximum",
+          ),
+          pointsToUse(net) > 0
+            ? h(
+                "button",
+                {
+                  type: "button",
+                  disabled,
+                  onClick: () => {
+                    requestedPoints.value = 0;
+                    pointsDraft.value = "0";
+                    pointsError.value = "";
+                  },
+                },
+                "Remove points",
+              )
+            : null,
+        ]),
+        pointsError.value
+          ? h("p", { class: "points-error", role: "alert" }, pointsError.value)
+          : null,
+        pointsToUse(net) > 0
+          ? h(
+              "p",
+              { class: "points-applied", role: "status" },
+              `${pointsToUse(net)} points applied. You save ${money(discount(net))}.`,
+            )
+          : h(
+              "p",
+              { class: "growth-muted" },
+              "No points applied yet. Apply points to update your total.",
+            ),
+        h(
+          "p",
+          { class: "growth-muted" },
+          `Limit: ${rules.loyaltyMaxPercent}% of product value after coupons. Tax is calculated after discounts.`,
+        ),
+        !rules.loyaltyEnabled
+          ? h("p", "Loyalty earning and redemption are currently paused.")
+          : null,
+      ],
+    );
   }
   function loyaltyPage() {
     if (!token.value)
@@ -534,7 +636,7 @@ export function useCustomerGrowth(
                 "div",
                 { class: "growth-conversation" },
                 current.messages.map((m) =>
-                  h("div", { class: `growth-message ${m.sender}` }, [
+                  h("div", { class: `growth-message ${m.sender} ${m.sender === "customer" ? "sent" : "received"}` }, [
                     h("small", `${m.sender} · ${date(m.createdAt)}`),
                     m.message,
                   ]),
@@ -574,9 +676,13 @@ export function useCustomerGrowth(
       ]),
     ];
   }
-  const forOrder=(id:string)=>{ticket.orderId=id;if(!ticket.subject)ticket.subject="Order support";};
+  const forOrder = (id: string) => {
+    ticket.orderId = id;
+    if (!ticket.subject) ticket.subject = "Order support";
+  };
   return {
-    forOrder,settings,
+    forOrder,
+    settings,
     eligible,
     requestedPoints,
     loadSettings,

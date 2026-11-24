@@ -15,7 +15,9 @@
     "dev:private-api": "pnpm --filter @training2/private-api dev",
     "prepare": "husky",
     "dev": "pnpm setup:local && pnpm -r --parallel --filter './apps/*' run dev",
-    "setup:local": "node apps/private-api/src/setup.ts && pnpm --filter @training2/prisma codegen"
+    "setup:local": "node apps/private-api/src/setup.ts && pnpm --filter @training2/prisma codegen",
+    "test:unit": "node tools/test-unit.mjs",
+    "test:graphql": "node apps/private-api/src/graphql.integration.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",

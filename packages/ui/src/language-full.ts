@@ -1,3 +1,5 @@
+import {profitLabels} from "./profit-labels.ts";
+import { repairLabels } from "./ui-repair-labels.ts";
 // UI text only. Product data, identifiers and API enum values remain unchanged.
 export const completeLabels: Array<[string, string, string, string]> = [
   ["QR payment", "QR கட்டணம்", "QR決済", "二维码支付"],
@@ -5,7 +7,7 @@ export const completeLabels: Array<[string, string, string, string]> = [
   [
     "Demo QR illustration — not a payable code",
     "மாதிரி QR படம் — பணம் செலுத்த முடியாது",
-    "デモQR画像・支払いには使えません",
+    "シミュレーションQR画像・支払いには使えません",
     "演示二维码，无法付款",
   ],
   ["Complete payment", "கட்டணத்தை முடி", "支払いを完了", "完成支付"],
@@ -162,7 +164,7 @@ export const completeLabels: Array<[string, string, string, string]> = [
   [
     "Fictional demo checkout. INR, when selected, uses a fixed demo rate of 0.55 INR per JPY.",
     "இது மாதிரிக் கட்டணம். INR தேர்வில் 1 JPY = 0.55 INR என்ற நிலையான மாதிரி விகிதம் பயன்படுத்தப்படும்.",
-    "架空のデモ決済です。INR選択時は1 JPY＝0.55 INRの固定デモレートを使います。",
+    "架空のシミュレーション決済です。INR選択時は1 JPY＝0.55 INRの固定シミュレーションレートを使います。",
     "此为模拟付款。选择INR时采用1 JPY＝0.55 INR的固定演示汇率。",
   ],
   [
@@ -287,7 +289,7 @@ export const completeLabels: Array<[string, string, string, string]> = [
   [
     "Availability is checked again at checkout. Demo options use fictional details; online gateway details stay with the provider.",
     "கட்டணத்தின்போது இருப்பு மீண்டும் சரிபார்க்கப்படும். மாதிரி விவரங்கள் கற்பனையானவை; இணையக் கட்டண விவரங்கள் வழங்குநரிடம் இருக்கும்.",
-    "購入時に在庫を再確認します。デモ情報は架空で、オンライン決済情報は決済会社が扱います。",
+    "購入時に在庫を再確認します。シミュレーション情報は架空で、オンライン決済情報は決済会社が扱います。",
     "结账时将再次检查库存。演示信息为虚构，在线支付信息由支付平台处理。",
   ],
   [
@@ -483,7 +485,7 @@ export const completeLabels: Array<[string, string, string, string]> = [
   [
     "AUTOMATIC DEMO DELIVERY",
     "தானியங்கி மாதிரி விநியோகம்",
-    "自動デモ配送",
+    "自動シミュレーション配送",
     "自动演示配送",
   ],
   [
@@ -513,7 +515,7 @@ export const completeLabels: Array<[string, string, string, string]> = [
   [
     "Your demo delivery timeline is complete.",
     "உங்கள் மாதிரி விநியோகம் முடிந்தது.",
-    "デモ配送が完了しました。",
+    "シミュレーション配送が完了しました。",
     "演示配送已完成。",
   ],
   [
@@ -525,7 +527,7 @@ export const completeLabels: Array<[string, string, string, string]> = [
   [
     "EXPECTED DEMO ARRIVAL",
     "எதிர்பார்க்கப்படும் மாதிரி வருகை",
-    "デモ到着予定",
+    "シミュレーション到着予定",
     "预计演示送达时间",
   ],
   [
@@ -624,7 +626,7 @@ export const completeLabels: Array<[string, string, string, string]> = [
   [
     "Uses the same automatic demo delivery updates as your current tracking page. This is a store demo reference, not a courier tracking number.",
     "தற்போதைய கண்காணிப்பைப் போலவே தானியங்கி மாதிரி விநியோகத்தைப் பயன்படுத்தும். இது கடையின் மாதிரிக் குறிப்பு; கூரியர் எண் அல்ல.",
-    "現在の配送状況ページと同じ自動デモ更新です。この番号はショップのデモ用で、配送会社の追跡番号ではありません。",
+    "現在の配送状況ページと同じ自動シミュレーション更新です。この番号はショップのシミュレーション用で、配送会社の追跡番号ではありません。",
     "与当前追踪页面使用相同的自动演示配送更新。这是商店演示编号，并非快递单号。",
   ],
   [
@@ -930,7 +932,7 @@ export const completeLabels: Array<[string, string, string, string]> = [
   [
     "Refunds follow staff receipt and inspection. Cash refunds are recorded only after staff have paid them. Demo payments never charge or refund real money.",
     "பணியாளர் பொருளைப் பெற்றுச் சரிபார்த்த பிறகு பணத்திருப்பம் நடைபெறும். பணத்தை வழங்கிய பின்னரே ரொக்கப் பணத்திருப்பம் பதிவாகும். மாதிரிக் கட்டணம் உண்மைப் பணத்தைப் பயன்படுத்தாது.",
-    "返品受領・検品後に返金します。現金返金は支払後に記録します。デモ決済で実際の金銭は動きません。",
+    "返品受領・検品後に返金します。現金返金は支払後に記録します。シミュレーション決済で実際の金銭は動きません。",
     "员工收货检验后退款。现金退款仅在实际退还后记录。演示付款不涉及真实资金。",
   ],
   ["Sending…", "அனுப்புகிறது…", "送信中…", "正在发送…"],
@@ -1213,7 +1215,7 @@ export const completeLabels: Array<[string, string, string, string]> = [
   [
     "Automatic demo timeline",
     "தானியங்கி மாதிரிக் காலவரிசை",
-    "自動デモ配送",
+    "自動シミュレーション配送",
     "自动演示时间线",
   ],
   [
@@ -1670,7 +1672,7 @@ export const completeLabels: Array<[string, string, string, string]> = [
   [
     "Demo refund only. No money moves.",
     "மாதிரிப் பணத்திருப்பம் மட்டும். உண்மைப் பணம் மாறாது.",
-    "デモ返金のみ。実際の金銭は動きません。",
+    "シミュレーション返金のみ。実際の金銭は動きません。",
     "仅演示退款，不涉及真实资金。",
   ],
   [
@@ -1884,7 +1886,7 @@ export const completeLabels: Array<[string, string, string, string]> = [
   [
     "Demo arrival · {0}",
     "மாதிரி வருகை · {0}",
-    "デモ到着予定・{0}",
+    "シミュレーション到着予定・{0}",
     "演示送达 · {0}",
   ],
   [
@@ -1930,7 +1932,7 @@ export const completeLabels: Array<[string, string, string, string]> = [
   [
     "Expected demo arrival: {0}",
     "எதிர்பார்க்கப்படும் மாதிரி வருகை: {0}",
-    "デモ到着予定：{0}",
+    "シミュレーション到着予定：{0}",
     "预计演示送达时间：{0}",
   ],
   [
@@ -2573,4 +2575,8 @@ completeLabels.push(
 
 completeLabels.push(...[["Product photo","பொருளின் புகைப்படம்","商品写真","商品照片"],["No photo yet","இன்னும் புகைப்படம் இல்லை","写真は未登録です","尚无照片"],["Upload photo","புகைப்படத்தைப் பதிவேற்று","写真をアップロード","上传照片"],["Replace photo","புகைப்படத்தை மாற்று","写真を変更","更换照片"],["Remove photo","புகைப்படத்தை அகற்று","写真を削除","移除照片"],["Rotate 90°","90° சுழற்று","90°回転","旋转90°"],["Preparing photo…","புகைப்படம் தயாராகிறது…","写真を処理中…","正在处理照片…"],["Product photo preview","பொருள் புகைப்பட முன்னோட்டம்","商品写真のプレビュー","商品照片预览"],["Upload product photo","பொருளின் புகைப்படத்தைப் பதிவேற்று","商品写真をアップロード","上传商品照片"],["Photo changes are applied when you save the product. Cancel keeps the saved photo.","பொருளைச் சேமிக்கும்போது புகைப்பட மாற்றங்கள் பயன்படுத்தப்படும். ரத்து செய்தால் பழைய படம் இருக்கும்.","写真の変更は商品を保存すると反映されます。キャンセルすると保存済みの写真が残ります。","保存商品时才会应用照片更改。取消会保留原有照片。"],["Show customers the actual product. JPEG, PNG or WebP, up to 10 MB. Photos are resized automatically.","வாடிக்கையாளர்களுக்கு உண்மையான பொருளைக் காட்டுங்கள். JPEG, PNG அல்லது WebP, 10 MB வரை. படங்கள் தானாக அளவு மாற்றப்படும்.","実際の商品を写真で紹介しましょう。JPEG・PNG・WebP、最大10 MB。サイズは自動調整されます。","向顾客展示实际商品。支持JPEG、PNG或WebP，最大10 MB。照片会自动调整大小。"]] as Array<[string,string,string,string]>);
 
-completeLabels.push(...[["Loyalty rewards","விசுவாசப் பரிசுகள்","ポイント特典","积分奖励"],["Loyalty points","விசுவாசப் புள்ளிகள்","ポイント","积分"],["Use loyalty points","விசுவாசப் புள்ளிகளைப் பயன்படுத்து","ポイントを使う","使用积分"],["Points history","புள்ளிகள் வரலாறு","ポイント履歴","积分记录"],["Available points","கிடைக்கும் புள்ளிகள்","利用可能ポイント","可用积分"],["Refresh rewards","பரிசுகளைப் புதுப்பி","ポイントを更新","刷新积分"],["Customer support","வாடிக்கையாளர் உதவி","カスタマーサポート","客户支持"],["Sales targets","விற்பனை இலக்குகள்","売上目標","销售目标"],["Store settings","கடை அமைப்புகள்","ストア設定","商店设置"],["Staff roles","ஊழியர் பொறுப்புகள்","スタッフ権限","员工权限"],["Cart recovery","கூடையை மீட்டெடுத்தல்","カート復元","购物车恢复"],["Weekly sales target","வார விற்பனை இலக்கு","週間売上目標","每周销售目标"],["Monthly sales target","மாத விற்பனை இலக்கு","月間売上目標","每月销售目标"],["Target amount (JPY)","இலக்கு தொகை (JPY)","目標金額（JPY）","目标金额（JPY）"],["Save target","இலக்கைச் சேமி","目標を保存","保存目标"],["Store name","கடை பெயர்","ストア名","商店名称"],["Tagline","கடை வாசகம்","キャッチコピー","商店标语"],["Support email","உதவி மின்னஞ்சல்","問い合わせメール","支持邮箱"],["Support phone","உதவி தொலைபேசி","問い合わせ電話","支持电话"],["Business hours","வணிக நேரம்","営業時間","营业时间"],["Store announcement","கடை அறிவிப்பு","ストアのお知らせ","商店公告"],["Returns policy","திரும்பப் பெறும் கொள்கை","返品ポリシー","退货政策"],["Loyalty rules","புள்ளிகள் விதிகள்","ポイントルール","积分规则"],["Enable earning and redemption","புள்ளிகள் பெறுதல் மற்றும் பயன்படுத்தலை இயக்கு","ポイント獲得と利用を有効化","启用积分获取与兑换"],["JPY spent to earn 1 point","1 புள்ளி பெற செலவிடும் JPY","1ポイント獲得に必要な金額（JPY）","每获得1积分所需消费（JPY）"],["JPY discount per point","ஒரு புள்ளிக்கான JPY தள்ளுபடி","1ポイントの割引額（JPY）","每积分抵扣金额（JPY）"],["Maximum loyalty discount (%)","அதிகபட்ச புள்ளித் தள்ளுபடி (%)","ポイント割引上限（%）","积分抵扣上限（%）"],["Reload settings","அமைப்புகளை மீண்டும் ஏற்று","設定を再読込","重新加载设置"],["Save settings","அமைப்புகளைச் சேமி","設定を保存","保存设置"],["Existing staff username","தற்போதைய ஊழியர் பயனர்பெயர்","既存スタッフのユーザー名","现有员工用户名"],["Staff role","ஊழியர் பொறுப்பு","スタッフ権限","员工角色"],["Apply role","பொறுப்பைப் பயன்படுத்து","権限を適用","应用角色"],["Administration history","நிர்வாக வரலாறு","管理操作履歴","管理操作记录"],["Inactive saved carts","செயலற்ற சேமித்த கூடைகள்","未再開の保存カート","未活跃的已保存购物车"],["Abandoned","கைவிடப்பட்டது","未再開","已放弃"],["Recently active","சமீபத்தில் செயல்பட்டது","最近利用あり","最近活跃"],["Your saved cart is waiting","உங்கள் சேமித்த கூடை காத்திருக்கிறது","保存済みのカートがあります","您有已保存的购物车"],["Restore saved cart","சேமித்த கூடையை மீட்டெடு","保存カートを復元","恢复已保存购物车"],["Merge with this cart","இந்தக் கூடையுடன் இணை","現在のカートに統合","合并到当前购物车"],["Keep this cart","இந்தக் கூடையை வைத்திரு","現在のカートを使う","保留当前购物车"],["Reload saved cart","சேமித்த கூடையை மீண்டும் ஏற்று","保存カートを再読込","重新加载已保存购物车"],["Open a support request","உதவி கோரிக்கையைத் தொடங்கு","問い合わせを作成","提交支持请求"],["Subject","தலைப்பு","件名","主题"],["Order ID (optional)","ஆர்டர் ID (விருப்பம்)","注文ID（任意）","订单ID（可选）"],["How can we help?","நாங்கள் எப்படி உதவலாம்?","お問い合わせ内容","需要什么帮助？"],["Send request","கோரிக்கையை அனுப்பு","問い合わせを送信","发送请求"],["Your requests","உங்கள் கோரிக்கைகள்","お問い合わせ一覧","我的请求"],["Refresh requests","கோரிக்கைகளைப் புதுப்பி","問い合わせを更新","刷新请求"],["Your reply","உங்கள் பதில்","返信内容","您的回复"],["Send reply","பதிலை அனுப்பு","返信を送信","发送回复"],["Reply to customer","வாடிக்கையாளருக்குப் பதில்","お客様への返信","回复顾客"],["Ticket status","கோரிக்கை நிலை","問い合わせ状態","工单状态"],["No support requests yet.","இன்னும் உதவி கோரிக்கைகள் இல்லை.","問い合わせはまだありません。","暂无支持请求。"],["No saved carts yet.","இன்னும் சேமித்த கூடைகள் இல்லை.","保存カートはまだありません。","暂无已保存的购物车。"],["Paid purchase points","பணம் செலுத்திய கொள்முதல் புள்ளிகள்","支払済み購入の獲得ポイント","已付款订单积分"],["Points reserved at checkout","செலுத்தும்போது ஒதுக்கப்பட்ட புள்ளிகள்","購入手続きで利用予約したポイント","结账时预留的积分"],["Cancelled/refunded order adjustment","ரத்து/திருப்பிச் செலுத்திய ஆர்டர் சரிசெய்தல்","キャンセル・返金による調整","取消或退款订单调整"],["Return/refund points adjustment","திரும்பப்பெறுதல்/பணம் திருப்புதல் புள்ளி சரிசெய்தல்","返品・返金のポイント調整","退货或退款积分调整"],["manager","மேலாளர்","マネージャー","经理"],["inventory","சரக்கு","在庫担当","库存人员"],["orders","ஆர்டர்கள்","注文担当","订单人员"],["support","உதவி","サポート担当","客服人员"],["disabled","முடக்கப்பட்டது","無効","已禁用"],["open","திறந்துள்ளது","受付中","待处理"],["in progress","செயல்பாட்டில்","対応中","处理中"],["resolved","தீர்க்கப்பட்டது","解決済み","已解决"]] as Array<[string,string,string,string]>);
+completeLabels.push(...([["Loyalty rewards","விசுவாசப் பரிசுகள்","ポイント特典","积分奖励"],["Loyalty points","விசுவாசப் புள்ளிகள்","ポイント","积分"],["Use loyalty points","விசுவாசப் புள்ளிகளைப் பயன்படுத்து","ポイントを使う","使用积分"],["Points history","புள்ளிகள் வரலாறு","ポイント履歴","积分记录"],["Available points","கிடைக்கும் புள்ளிகள்","利用可能ポイント","可用积分"],["Refresh rewards","பரிசுகளைப் புதுப்பி","ポイントを更新","刷新积分"],["Customer support","வாடிக்கையாளர் உதவி","カスタマーサポート","客户支持"],["Sales targets","விற்பனை இலக்குகள்","売上目標","销售目标"],["Store settings","கடை அமைப்புகள்","ストア設定","商店设置"],["Staff roles","ஊழியர் பொறுப்புகள்","スタッフ権限","员工权限"],["Cart recovery","கூடையை மீட்டெடுத்தல்","カート復元","购物车恢复"],["Weekly sales target","வார விற்பனை இலக்கு","週間売上目標","每周销售目标"],["Monthly sales target","மாத விற்பனை இலக்கு","月間売上目標","每月销售目标"],["Target amount (JPY)","இலக்கு தொகை (JPY)","目標金額（JPY）","目标金额（JPY）"],["Save target","இலக்கைச் சேமி","目標を保存","保存目标"],["Store name","கடை பெயர்","ストア名","商店名称"],["Tagline","கடை வாசகம்","キャッチコピー","商店标语"],["Support email","உதவி மின்னஞ்சல்","問い合わせメール","支持邮箱"],["Support phone","உதவி தொலைபேசி","問い合わせ電話","支持电话"],["Business hours","வணிக நேரம்","営業時間","营业时间"],["Store announcement","கடை அறிவிப்பு","ストアのお知らせ","商店公告"],["Returns policy","திரும்பப் பெறும் கொள்கை","返品ポリシー","退货政策"],["Loyalty rules","புள்ளிகள் விதிகள்","ポイントルール","积分规则"],["Enable earning and redemption","புள்ளிகள் பெறுதல் மற்றும் பயன்படுத்தலை இயக்கு","ポイント獲得と利用を有効化","启用积分获取与兑换"],["JPY spent to earn 1 point","1 புள்ளி பெற செலவிடும் JPY","1ポイント獲得に必要な金額（JPY）","每获得1积分所需消费（JPY）"],["JPY discount per point","ஒரு புள்ளிக்கான JPY தள்ளுபடி","1ポイントの割引額（JPY）","每积分抵扣金额（JPY）"],["Maximum loyalty discount (%)","அதிகபட்ச புள்ளித் தள்ளுபடி (%)","ポイント割引上限（%）","积分抵扣上限（%）"],["Reload settings","அமைப்புகளை மீண்டும் ஏற்று","設定を再読込","重新加载设置"],["Save settings","அமைப்புகளைச் சேமி","設定を保存","保存设置"],["Existing staff username","தற்போதைய ஊழியர் பயனர்பெயர்","既存スタッフのユーザー名","现有员工用户名"],["Staff role","ஊழியர் பொறுப்பு","スタッフ権限","员工角色"],["Apply role","பொறுப்பைப் பயன்படுத்து","権限を適用","应用角色"],["Administration history","நிர்வாக வரலாறு","管理操作履歴","管理操作记录"],["Inactive saved carts","செயலற்ற சேமித்த கூடைகள்","未再開の保存カート","未活跃的已保存购物车"],["Abandoned","கைவிடப்பட்டது","未再開","已放弃"],["Recently active","சமீபத்தில் செயல்பட்டது","最近利用あり","最近活跃"],["Your saved cart is waiting","உங்கள் சேமித்த கூடை காத்திருக்கிறது","保存済みのカートがあります","您有已保存的购物车"],["Restore saved cart","சேமித்த கூடையை மீட்டெடு","保存カートを復元","恢复已保存购物车"],["Merge with this cart","இந்தக் கூடையுடன் இணை","現在のカートに統合","合并到当前购物车"],["Keep this cart","இந்தக் கூடையை வைத்திரு","現在のカートを使う","保留当前购物车"],["Reload saved cart","சேமித்த கூடையை மீண்டும் ஏற்று","保存カートを再読込","重新加载已保存购物车"],["Open a support request","உதவி கோரிக்கையைத் தொடங்கு","問い合わせを作成","提交支持请求"],["Subject","தலைப்பு","件名","主题"],["Order ID (optional)","ஆர்டர் ID (விருப்பம்)","注文ID（任意）","订单ID（可选）"],["How can we help?","நாங்கள் எப்படி உதவலாம்?","お問い合わせ内容","需要什么帮助？"],["Send request","கோரிக்கையை அனுப்பு","問い合わせを送信","发送请求"],["Your requests","உங்கள் கோரிக்கைகள்","お問い合わせ一覧","我的请求"],["Refresh requests","கோரிக்கைகளைப் புதுப்பி","問い合わせを更新","刷新请求"],["Your reply","உங்கள் பதில்","返信内容","您的回复"],["Send reply","பதிலை அனுப்பு","返信を送信","发送回复"],["Reply to customer","வாடிக்கையாளருக்குப் பதில்","お客様への返信","回复顾客"],["Ticket status","கோரிக்கை நிலை","問い合わせ状態","工单状态"],["No support requests yet.","இன்னும் உதவி கோரிக்கைகள் இல்லை.","問い合わせはまだありません。","暂无支持请求。"],["No saved carts yet.","இன்னும் சேமித்த கூடைகள் இல்லை.","保存カートはまだありません。","暂无已保存的购物车。"],["Paid purchase points","பணம் செலுத்திய கொள்முதல் புள்ளிகள்","支払済み購入の獲得ポイント","已付款订单积分"],["Points reserved at checkout","செலுத்தும்போது ஒதுக்கப்பட்ட புள்ளிகள்","購入手続きで利用予約したポイント","结账时预留的积分"],["Cancelled/refunded order adjustment","ரத்து/திருப்பிச் செலுத்திய ஆர்டர் சரிசெய்தல்","キャンセル・返金による調整","取消或退款订单调整"],["Return/refund points adjustment","திரும்பப்பெறுதல்/பணம் திருப்புதல் புள்ளி சரிசெய்தல்","返品・返金のポイント調整","退货或退款积分调整"],["manager","மேலாளர்","マネージャー","经理"],["inventory","சரக்கு","在庫担当","库存人员"],["orders","ஆர்டர்கள்","注文担当","订单人员"],["support","உதவி","サポート担当","客服人员"],["disabled","முடக்கப்பட்டது","無効","已禁用"],["open","திறந்துள்ளது","受付中","待处理"],["in progress","செயல்பாட்டில்","対応中","处理中"],["resolved","தீர்க்கப்பட்டது","解決済み","已解决"]] as Array<[string,string,string,string]>).filter(([key])=>!completeLabels.some(([existing])=>existing===key)));
+
+completeLabels.push(...repairLabels.filter(([key])=>!completeLabels.some(([existing])=>existing===key)));
+
+completeLabels.push(...profitLabels);

@@ -4,7 +4,7 @@
   gap: 8px;
   margin: 0 0 28px;
   padding-bottom: 16px;
-  border-bottom: 1px solid #e2e9df;
+  border-bottom: 1px solid #dfe3e9;
 }
 .shopping-tools-nav .btn {
   font-size: 13px;
@@ -78,11 +78,11 @@
   font-size: 13px;
 }
 .tools-note {
-  background: #f0f5ec;
-  border: 1px solid #dce7d6;
+  background: #ecf0f5;
+  border: 1px solid #d6dde7;
   border-radius: 12px;
   padding: 14px 16px;
-  color: #64785a;
+  color: #54667e;
   font-size: 13px;
   line-height: 1.8;
 }
@@ -90,29 +90,29 @@
   display: inline-block;
   padding: 6px 11px;
   border-radius: 20px;
-  background: #e7f1df;
-  color: #4b723a;
+  background: #dfe7f1;
+  color: #3a5272;
   font-size: 11px;
   line-height: 1.6;
 }
 .tools-empty {
   padding: 34px;
   line-height: 1.8;
-  color: #71816b;
+  color: #5e738e;
   margin-bottom: 24px;
 }
 .tools-empty h1 {
-  color: #29432c;
+  color: #1e2125;
   font-size: 28px;
 }
 .tools-empty .btn {
   margin-top: 16px;
 }
 .saved-address-picker {
-  border: 1px solid #dce7d6;
+  border: 1px solid #d6dde7;
   padding: 18px;
   border-radius: 14px;
-  background: #f7faf3;
+  background: #f3f6fa;
   margin-bottom: 22px;
 }
 .saved-address-picker .field {
@@ -128,16 +128,16 @@
   width: calc(100% - 44px);
   margin: 0 22px 18px;
   padding: 9px 12px;
-  border: 1px solid #dce5d7;
+  border: 1px solid #d7dde5;
   border-radius: 10px;
-  color: #718269;
-  background: #f8faf6;
+  color: #5e728d;
+  background: #f6f8fa;
   font-size: 12px;
 }
 .compare-toggle.selected {
-  background: #e6f1dd;
-  color: #40662e;
-  border-color: #a9c593;
+  background: #dde6f1;
+  color: #2e4666;
+  border-color: #93a9c5;
 }
 .comparison-scroll {
   overflow-x: auto;
@@ -156,14 +156,14 @@
   padding: 20px;
   vertical-align: top;
   text-align: left;
-  border-bottom: 1px solid #e5ebe1;
+  border-bottom: 1px solid #e1e5eb;
   font-size: 14px;
   line-height: 1.8;
   overflow-wrap: anywhere;
 }
 .comparison-table th {
-  background: #f6f9f1;
-  color: #526b46;
+  background: #f1f4f9;
+  color: #46566b;
   text-transform: none;
   letter-spacing: 0;
 }
@@ -172,7 +172,7 @@
   line-height: 1.5;
 }
 .comparison-table td {
-  color: #5e7451;
+  color: #4f6076;
 }
 .comparison-art {
   max-width: 180px;
@@ -191,7 +191,7 @@
 }
 .return-request > small {
   font-size: 12px;
-  color: #7e8b74;
+  color: #667c99;
 }
 .return-request > strong {
   display: block;
@@ -210,7 +210,7 @@
   padding-left: 20px;
   margin-block: 20px;
   font-size: 13px;
-  color: #708364;
+  color: #5c708b;
   line-height: 1.9;
 }
 .tools-toolbar {
@@ -234,7 +234,7 @@
   min-height: 200px;
 }
 .price-axis {
-  fill: #78896e;
+  fill: #637894;
   font-size: 10px;
   font-family: inherit;
 }
@@ -248,12 +248,12 @@
   display: grid;
   gap: 14px;
   padding: 20px;
-  background: #f1f6ec;
+  background: #ecf0f6;
   border-radius: 14px;
 }
 .price-history-kpis small {
   font-size: 12px;
-  color: #788d68;
+  color: #627793;
 }
 .price-history-kpis strong {
   font-size: clamp(22px, 2.5vw, 32px);
@@ -263,7 +263,7 @@
   display: flex;
   gap: 18px;
   font-size: 12px;
-  color: #798b6b;
+  color: #627894;
 }
 .price-history-legend span::before {
   content: "";
@@ -274,10 +274,10 @@
   vertical-align: middle;
 }
 .price-history-legend .regular::before {
-  background: #d1a64a;
+  background: #75aaff;
 }
 .price-history-legend .selling::before {
-  background: #377c54;
+  background: #37557c;
 }
 .tools-table {
   width: 100%;
@@ -301,9 +301,9 @@
 }
 .variant-picker {
   padding: 15px;
-  border: 1px solid #dbe6d6;
+  border: 1px solid #d6dde6;
   border-radius: 12px;
-  background: #f6faf1;
+  background: #f1f5fa;
   margin: 18px 0;
 }
 .variant-picker > label {
@@ -320,7 +320,7 @@
   font-size: 12px;
   line-height: 1.7;
   margin-top: 10px;
-  color: #7d8c73;
+  color: #667c99;
 }
 html[data-theme="dark"]
   :is(
@@ -329,26 +329,26 @@ html[data-theme="dark"]
     .variant-picker,
     .price-history-kpis > div
   ) {
-  background: #243a29;
-  border-color: #42583a;
-  color: #bfd0b5;
+  background: #1a1d20;
+  border-color: #3a4758;
+  color: #b5c1d0;
 }
 html[data-theme="dark"] :is(.comparison-table th, .compare-toggle) {
-  background: #233827;
-  color: #c4d9bb;
-  border-color: #425b39;
+  background: #191c1f;
+  color: #bbc8d9;
+  border-color: #39485b;
 }
 html[data-theme="dark"] .comparison-table td {
-  color: #bed0b4;
+  color: #b4c0d0;
 }
 html[data-theme="dark"] .price-axis {
-  fill: #b7caae;
+  fill: #aebaca;
 }
 html[data-theme="dark"] .price-history-chart line {
-  stroke: #3c5035;
+  stroke: #25292d;
 }
 html[data-theme="dark"] .tools-empty h1 {
-  color: #e0edda;
+  color: #dae2ed;
 }
 @media (max-width: 850px) {
   .tools-two-column,
@@ -414,9 +414,9 @@ html[data-theme="dark"] .tools-empty h1 {
 .comparison-picker-heading h2 { margin: 0; }
 .comparison-picker-filters { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
 .comparison-picker-filters label { display: grid; gap: 8px; font-weight: 600; min-width: 0; }
-.comparison-picker-filters :is(input, select) { width: 100%; min-width: 0; padding: 12px; font: inherit; color: inherit; background: transparent; border: 1px solid #a3b49f; border-radius: 10px; }
+.comparison-picker-filters :is(input, select) { width: 100%; min-width: 0; padding: 12px; font: inherit; color: inherit; background: transparent; border: 1px solid #98a7bb; border-radius: 10px; }
 .comparison-picker-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 18px 0; }
-.comparison-choice { display: grid; grid-template-columns: 64px minmax(0, 1fr); align-items: center; gap: 14px; padding: 18px; border: 1px solid #b6c5b0; border-radius: 14px; }
+.comparison-choice { display: grid; grid-template-columns: 64px minmax(0, 1fr); align-items: center; gap: 14px; padding: 18px; border: 1px solid #adb9c8; border-radius: 14px; }
 .comparison-choice h3 { margin: 0; font-size: 17px; overflow-wrap: anywhere; }
 .comparison-choice p { margin: 6px 0; font-size: 14px; }
 .comparison-choice > button { grid-column: 1 / -1; }

@@ -1,3 +1,4 @@
+import {deliveryFields,deliverySummary} from "../../../packages/ui/src/delivery-preferences.ts";
 import type { Ref } from "vue";
 import { computed, reactive, ref, watch } from "vue";
 import {
@@ -59,6 +60,7 @@ export function useShoppingTools(
     address: "",
     city: "",
     postalCode: "",
+    deliveryPreference: "standard" as NonNullable<Recipient["deliveryPreference"]>, deliveryPhone:"", deliveryInstructions:"",
     isDefault: false,
   });
   const returnForm = reactive({
@@ -143,6 +145,7 @@ export function useShoppingTools(
       address: "",
       city: "",
       postalCode: "",
+    deliveryPreference: "standard" as NonNullable<Recipient["deliveryPreference"]>, deliveryPhone:"", deliveryInstructions:"",
       isDefault: false,
     });
     editing.value = "";
@@ -164,6 +167,7 @@ export function useShoppingTools(
               address: address.address,
               city: address.city,
               postalCode: address.postalCode,
+              deliveryPreference:address.deliveryPreference,deliveryPhone:address.deliveryPhone,deliveryInstructions:address.deliveryInstructions,
             },
             isDefault: address.isDefault,
           }),
@@ -255,7 +259,7 @@ export function useShoppingTools(
               const item = addressList.value.find(
                 (a) => a.id === selectedAddress.value,
               );
-              if (item) Object.assign(delivery, item.recipient);
+              if (item) Object.assign(delivery, {deliveryPreference:"standard",deliveryPhone:"",deliveryInstructions:""}, item.recipient);
             },
           },
           [
@@ -276,8 +280,8 @@ export function useShoppingTools(
   async function prepareCheckout(delivery: Recipient) {
     await loadAddresses();
     const preferred = addressList.value.find((item) => item.isDefault);
-    if (preferred && Object.values(delivery).every((value) => !value)) {
-      Object.assign(delivery, preferred.recipient);
+    if (preferred && [delivery.name,delivery.address,delivery.city,delivery.postalCode].every((value) => !value)) {
+      Object.assign(delivery, {deliveryPreference:"standard",deliveryPhone:"",deliveryInstructions:""}, preferred.recipient);
       selectedAddress.value = preferred.id;
     }
   }
@@ -317,6 +321,7 @@ export function useShoppingTools(
                   h("address", [
                     h("strong", item.recipient.name),
                     h("span", item.recipient.address),
+                    deliverySummary(item.recipient)?h("small",{class:"delivery-instructions"},deliverySummary(item.recipient)):null,
                     h(
                       "span",
                       `${item.recipient.city} · ${item.recipient.postalCode}`,
@@ -329,6 +334,7 @@ export function useShoppingTools(
                         editing.value = item.id;
                         Object.assign(address, {
                           label: item.label,
+                          deliveryPreference:"standard", deliveryPhone:"", deliveryInstructions:"",
                           ...item.recipient,
                           isDefault: item.isDefault,
                         });
@@ -376,6 +382,7 @@ export function useShoppingTools(
               }),
             ]),
           ),
+          deliveryFields(address),
           h("label", { class: "check-label" }, [
             h("input", {
               type: "checkbox",
@@ -400,6 +407,12 @@ export function useShoppingTools(
       ]),
     ];
   }
+  function returnProgress(status:string){
+ const stages=["requested","approved","received","refunded"];
+ const current=status==="refunding"?2:status==="completed"?3:stages.indexOf(status);
+ if(status==="rejected")return h("p",{class:"tools-note"},"Request declined. Contact support if you need help.");
+ return h("ol",{class:"return-progress","aria-label":"Return progress"},["Request sent","Staff approval","Items received","Completed"].map((label,i)=>h("li",{class:i<=current?"done":"","aria-current":i===current?"step":undefined},label)));
+ }
   function returnsPage(signIn: () => void) {
     if (!identity())
       return [
@@ -438,6 +451,8 @@ export function useShoppingTools(
                     returnLabel(item.status),
                   ),
                 ]),
+                returnProgress(item.status),
+                h("ul",{class:"return-item-list"},item.receipt.items.map(p=>h("li",p.name+" × "+p.quantity))),
                 h("p", item.reason),
                 item.details ? h("p", { class: "muted" }, item.details) : null,
                 h("small", `Requested ${date(item.createdAt)}`),
@@ -688,6 +703,7 @@ export function useShoppingTools(
     compareButton,
     loadAddresses,
     loadReturns,
+    selectReturn: (id:string) => { returnForm.orderId=id; },
     prepareCheckout,
     addressPicker,
     addressesPage,

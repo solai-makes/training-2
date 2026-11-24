@@ -1,5 +1,5 @@
 .delivery-page {
-  --delivery-accent: #267c51;
+  --delivery-accent: #264b7c;
   padding-block: 12px 40px;
 }
 .delivery-heading {
@@ -30,8 +30,8 @@
   display: inline-block;
   border-radius: 30px;
   padding: 7px 11px;
-  background: #e9f5ec;
-  color: #24683e;
+  background: #e9eef5;
+  color: #222a35;
   font-size: 11px;
   letter-spacing: 1px;
   font-weight: 700;
@@ -41,7 +41,7 @@
   margin: 20px 0 12px;
 }
 .delivery-hero-copy > p {
-  color: #627a6c;
+  color: #586b84;
   line-height: 1.7;
 }
 .delivery-identifiers {
@@ -57,7 +57,7 @@
 .delivery-identifiers small {
   font-size: 10px;
   letter-spacing: 1px;
-  color: #758679;
+  color: #647a97;
 }
 .delivery-identifiers strong {
   font-size: 15px;
@@ -69,7 +69,7 @@
   justify-items: center;
   gap: 16px;
   padding: 32px;
-  background: #edf5ed;
+  background: #edf0f5;
   text-align: center;
 }
 .delivery-arrival > .icon {
@@ -77,13 +77,13 @@
   height: 64px;
   border-radius: 22px;
   padding: 15px;
-  background: #d7ebd7;
-  color: #2a7145;
+  background: #d7e0eb;
+  color: #2a4971;
 }
 .delivery-arrival small {
   font-size: 10px;
   letter-spacing: 1px;
-  color: #5b7861;
+  color: #54677f;
 }
 .delivery-arrival strong {
   max-width: 250px;
@@ -92,7 +92,7 @@
 }
 .delivery-arrival > span:last-child {
   font-size: 12px;
-  color: #677c6d;
+  color: #5b6e88;
 }
 .delivery-progress {
   padding: 30px 32px;
@@ -109,7 +109,7 @@
   font-size: 21px;
 }
 .delivery-live {
-  color: #28744b;
+  color: #284974;
   font-size: 12px;
   white-space: nowrap;
 }
@@ -133,7 +133,7 @@
   left: 50%;
   width: 100%;
   height: 4px;
-  background: #dce3de;
+  background: #d9dfe6;
 }
 .delivery-milestone.past::before {
   background: var(--delivery-accent);
@@ -148,8 +148,8 @@
   height: 40px;
   border: 4px solid white;
   border-radius: 50%;
-  background: #e5eae6;
-  color: #718176;
+  background: #e3e7ec;
+  color: #617691;
   font-size: 12px;
 }
 .milestone-dot .icon {
@@ -161,7 +161,7 @@
   color: white;
 }
 .delivery-milestone.current .milestone-dot {
-  box-shadow: 0 0 0 5px #267c5120;
+  box-shadow: 0 0 0 5px #264b7c20;
   animation: delivery-pulse 2s ease-in-out 3;
 }
 .milestone-copy {
@@ -173,11 +173,11 @@
   font-size: 15px;
 }
 .milestone-copy small {
-  color: #7d8b80;
+  color: #6b819d;
   font-size: 12px;
 }
 .milestone-copy time {
-  color: #6e7e73;
+  color: #5e738e;
   font-size: 11px;
   line-height: 1.6;
   max-width: 155px;
@@ -194,7 +194,7 @@
   background: #eaf4ff;
 }
 .symbol-1 {
-  color: #b37a18;
+  color: #75aaff;
   background: #fff4d7;
 }
 .symbol-2 {
@@ -202,13 +202,13 @@
   background: #dff6f7;
 }
 .symbol-3 {
-  color: #338445;
-  background: #e5f4e8;
+  color: #335684;
+  background: #e5ecf4;
 }
 .delivery-disclosure {
-  border-top: 1px solid #e7ece7;
+  border-top: 1px solid #e5e9ee;
   padding-top: 20px;
-  color: #7b897f;
+  color: #697f9b;
   font-size: 12px;
   line-height: 1.8;
   margin: 26px 0 0;
@@ -235,7 +235,7 @@
   overflow-wrap: anywhere;
 }
 .delivery-detail > small {
-  color: #78867b;
+  color: #667c98;
 }
 .delivery-detail > p {
   line-height: 1.7;
@@ -256,14 +256,14 @@
   font-size: 14px;
 }
 .delivery-item small {
-  color: #758378;
+  color: #637995;
   font-size: 12px;
 }
 .delivery-order-total {
   display: flex;
   justify-content: space-between;
   gap: 18px;
-  border-top: 1px solid #e1e9e2;
+  border-top: 1px solid #e0e4ea;
   padding-top: 18px;
   margin: 16px 0 22px;
 }
@@ -277,15 +277,15 @@
   align-items: center;
   gap: 16px;
   padding: 18px 28px;
-  border-bottom: 1px solid #e7ece7;
-  background: #f6faf6;
+  border-bottom: 1px solid #e5e9ee;
+  background: #f6f8fa;
 }
 .order-progress-summary > div {
   display: grid;
   gap: 7px;
 }
 .order-progress-summary small {
-  color: #6c8170;
+  color: #5f738e;
   font-size: 12px;
 }
 .order-card > .coupon-savings {
@@ -294,8 +294,8 @@
   font-size: 14px;
 }
 html[data-theme="dark"] :is(.delivery-arrival, .order-progress-summary) {
-  background: #20392c;
-  border-color: #3c5345;
+  background: #181b1f;
+  border-color: #394656;
 }
 html[data-theme="dark"]
   :is(
@@ -308,14 +308,14 @@ html[data-theme="dark"]
     .milestone-copy time,
     .delivery-disclosure
   ) {
-  color: #b4cbbb;
+  color: #b3becc;
 }
 html[data-theme="dark"] .delivery-milestone .milestone-dot {
-  border-color: #192a23;
+  border-color: #121417;
 }
 @keyframes delivery-pulse {
   50% {
-    box-shadow: 0 0 0 9px #267c5110;
+    box-shadow: 0 0 0 9px #264b7c10;
   }
 }
 @media (max-width: 720px) {
@@ -381,3 +381,5 @@ html[data-theme="dark"] .delivery-milestone .milestone-dot {
     animation: none;
   }
 }
+
+.delivery-person-card{display:grid;gap:7px;margin:18px 0;padding:14px;border:1px solid #8b9fb966;border-radius:12px}.delivery-person-card strong{font-size:20px}.delivery-person-card small{line-height:1.6}

@@ -1,0 +1,12 @@
+**/node_modules
+**/dist
+**/generated
+.git
+.local
+.pnpm-store
+**/.env
+**/.env.*
+**/*.log
+outputs
+work
+upgrade-solaistore.cjs

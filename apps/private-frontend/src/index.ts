@@ -1,7 +1,17 @@
+import {ProfitDashboard} from "./profit-dashboard.ts";
+import {useDeliveryFleet} from "./delivery-fleet.ts";
+import {siteFooter} from "../../../packages/ui/src/site-footer.ts";
+import {brandMark,installBrandIcon} from "../../../packages/ui/src/brand-logo.ts";
+import {BackToTop} from "../../../packages/ui/src/back-to-top.ts";
+import {AnimatedNumber} from "../../../packages/ui/src/animated-number.ts";
+import {deliverySummary} from "../../../packages/ui/src/delivery-preferences.ts";
+import {useRestockDemand} from "./restock.ts";
 import { useStaffGrowth } from "./store-growth.ts";
 import { useProductPhoto } from "./product-photo.ts";
 import "./product-photo.css";
-import { workspaceRequest } from "./workspace-request.ts";
+import {staffRequest as workspaceRequest} from "./staff-request.ts";
+import {VueQueryPlugin} from "@tanstack/vue-query";
+import {staffQueryClient} from "./query-client.ts";
 import {
   SUBCATEGORIES,
   productSubcategory,
@@ -53,6 +63,8 @@ import "../../../packages/ui/src/theme.css";
 import type { StockReport } from "./stock-chart.ts";
 import { stockCharts } from "./stock-chart.ts";
 
+import "../../../packages/ui/src/ui-repairs.css";
+
 const icon = (name: string) =>
   h("span", { class: "icon", innerHTML: iconSvg(name) });
 const btn = (
@@ -85,6 +97,7 @@ type Stats = {
   revenue: number;
   daily: Array<{ day: string; orders: number }>;
 };
+installBrandIcon();
 createApp({
   setup() {
     const incoming = new URLSearchParams(location.hash.slice(1)).get(
@@ -97,24 +110,32 @@ createApp({
     const token = ref(sessionStorage.getItem("training2.admin") ?? "");
     const page = ref<
       | "overview"
+      | "profit"
       | "inventory"
+      | "products"
       | "orders"
+      | "delivery-partners"
       | "activity"
       | "prices"
       | "variants"
       | "returns" | "support" | "targets" | "recovery" | "settings" | "staff"
     >("overview");
-    const sales = ref<SalesReport | null>(null),
-      salesDays = ref(7);
-    watch(salesDays, async (requestedDays) => {
-      sales.value = null;
-      if (!token.value || !growth.can("analytics:view")) return;
-      try {
-        const result = await request(`/store/analytics?days=${requestedDays}`);
-        if (salesDays.value === requestedDays) sales.value = result;
-      } catch (failure) {
-        error.value = (failure as Error).message;
-      }
+    const orderSearch=ref(""),orderSearchApplied=ref("");
+    function applyOrderSearch(){orderSearchApplied.value=orderSearch.value.trim();orderPage.value=1;void refresh();}
+    const sales=ref<SalesReport|null>(null),salesDays=ref<number|'custom'>(7),salesQuery=ref('days=7'),salesFrom=ref(''),salesTo=ref(''),salesPending=ref(false);
+    function setSalesDays(value:number|'custom'){
+      salesDays.value=value;
+      if(value==='custom'){salesFrom.value=sales.value?.from??'';salesTo.value=sales.value?.to??'';}
+      else salesQuery.value='days='+value;
+    }
+    function applySalesDates(){if(!salesFrom.value||!salesTo.value){error.value='Choose both start and end dates.';return;}salesQuery.value=new URLSearchParams({from:salesFrom.value,to:salesTo.value}).toString();}
+    const salesControls=()=>({from:salesFrom.value,to:salesTo.value,loading:salesPending.value,onFrom:(v:string)=>salesFrom.value=v,onTo:(v:string)=>salesTo.value=v,onApply:applySalesDates,onClear:()=>{salesFrom.value="";salesTo.value="";error.value="";}});
+    watch(salesQuery,async requestedQuery=>{
+      if(!token.value||!growth.can('analytics:view'))return;
+      salesPending.value=true;error.value='';
+      try{const result=await request('/store/analytics?'+requestedQuery);if(salesQuery.value===requestedQuery)sales.value=result;}
+      catch(failure){if(salesQuery.value===requestedQuery)error.value=(failure as Error).message;}
+      finally{if(salesQuery.value===requestedQuery)salesPending.value=false;}
     });
     const stockChart = ref<StockReport | null>(null),
       chartProduct = ref(""),
@@ -180,7 +201,9 @@ createApp({
       noticeTimer: ReturnType<typeof setTimeout> | undefined,
       active: Promise<void> | null = null,
       previousFocus: HTMLElement | null = null;
+    const restock = useRestockDemand(request,id=>{const product=products.value.find(p=>p.id===id);if(product)open("stock",product);});
     const growth = useStaffGrowth(request,notify);
+    const fleet=useDeliveryFleet(request,()=>growth.can("orders:write"));
     const shopping = useStaffShopping(
       request,
       products,
@@ -230,14 +253,14 @@ createApp({
         try {
           await growth.me();
           if(!growth.pageAllowed(page.value)) page.value = growth.role.value === "inventory" ? "inventory" : "orders";
-          const requestedDays = salesDays.value;
+          const requestedQuery = salesQuery.value;
           const [first, orderList, eventList, overview, report, chart] =
             await Promise.all([
               request("/products?pageSize=100"),
-              growth.can("orders:view") ? request(`/store/orders?page=${orderPage.value}&pageSize=10`) : Promise.resolve({items:[],total:0}),
+              growth.can("orders:view") ? request(`/store/orders?page=${orderPage.value}&pageSize=10&search=${encodeURIComponent(orderSearchApplied.value)}`) : Promise.resolve({items:[],total:0}),
               request("/store/inventory/events"),
               growth.can("analytics:view") ? request("/store/overview") : Promise.resolve(stats.value),
-              growth.can("analytics:view") ? request(`/store/analytics?days=${requestedDays}`) : Promise.resolve(null),
+              growth.can("analytics:view") ? request(`/store/analytics?${requestedQuery}`) : Promise.resolve(null),
               growth.can("analytics:view") ? request(
                 "/store/inventory/chart?days=" +
                   chartDays.value +
@@ -252,13 +275,15 @@ createApp({
             all = all.concat(next.items);
           }
           products.value = all;
+          if(page.value==="inventory"&&growth.can("catalog:view")) void restock.load();
           if(["prices","variants","returns"].includes(page.value)) await shopping.refresh(page.value);
           if(["support","targets","recovery"].includes(page.value)) await growth.load(page.value);
           orders.value = orderList.items;
+          if(page.value==="orders"||page.value==="delivery-partners")void fleet.load();
           orderTotal.value = orderList.total;
           activities.value = eventList.items;
           stats.value = overview;
-          if (salesDays.value === requestedDays) sales.value = report;
+          if (salesQuery.value === requestedQuery) sales.value = report;
           stockChart.value = chart;
           online.value = true;
           lastSync.value = new Date().toLocaleTimeString(locale());
@@ -320,10 +345,13 @@ createApp({
     }
     function changePage(target: typeof page.value) {
       page.value = target;
+      if(target==="delivery-partners"||target==="orders")void fleet.load();
+      if(target==="inventory") void restock.load();
       if(["prices","variants","returns"].includes(target)) void shopping.refresh(target);
       if(["support","targets","recovery","settings","staff"].includes(target)) void growth.load(target);
       search.value = "";
       error.value = "";
+      void nextTick(() => window.scrollTo({top:0,behavior:"instant"}));
     }
     function open(type: typeof modal.value, product: Product | null = null) {
       selected.value = product;
@@ -559,7 +587,7 @@ createApp({
           [
             "cart",
             "Confirmed order value",
-            money(stats.value.revenue),
+            stats.value.revenue,
             `${stats.value.confirmed} confirmed orders · saved receipts`,
           ],
         ].map(([i, label, value, caption]) =>
@@ -568,7 +596,7 @@ createApp({
               h("span", label),
               icon(String(i)),
             ]),
-            h("strong", String(value)),
+            h(AnimatedNumber,{value:Number(value),format:label==="Confirmed order value"?"money":"number"}),
             h("small", caption),
           ]),
         ),
@@ -599,6 +627,7 @@ createApp({
                     h("td", [
                       h("strong", `#${order.id.slice(0, 8).toUpperCase()}`),
                       h("small", order.receipt?.recipient?.name ?? "Customer"),
+                      deliverySummary(order.receipt?.recipient)?h("small",{class:"delivery-instructions"},deliverySummary(order.receipt?.recipient)):null,
                     ]),
                     h("td", date(order.createdAt)),
                     h(
@@ -652,6 +681,7 @@ createApp({
                         : null,
                     ]),
                     h("td", { class: "staff-delivery-cell" }, [
+                      fleet.quickAssign(order),
                       h(
                         "span",
                         { class: "staff-delivery-status" },
@@ -742,8 +772,9 @@ createApp({
         salesDashboard(
           sales.value,
           salesDays.value,
-          (d) => (salesDays.value = d),
+          setSalesDays,
           (message) => (error.value = message),
+          salesControls(),
         ),
         metrics(),
         chartView(),
@@ -862,16 +893,18 @@ createApp({
           ? `Offer ended · ${date(window.endsAt)}`
           : `Offer active until ${date(window.endsAt)}`;
     }
-    function inventory() {
+    function inventory(productsOnly=false) {
       return [
+        ...(productsOnly?[]:[restock.panel(),
         salesDashboard(
           sales.value,
           salesDays.value,
-          (d) => (salesDays.value = d),
+          setSalesDays,
           (message) => (error.value = message),
+          salesControls(),
         ),
         metrics(),
-        chartView(),
+        chartView()]),
         h("section", { class: "card" }, [
           h("div", { class: "inventory-toolbar" }, [
             h("label", { class: "search-box" }, [
@@ -1495,7 +1528,7 @@ createApp({
       return h("div", { class: "staff-login" }, [
         h("section", { class: "staff-login-story" }, [
           h("div", { class: "brand" }, [
-            h("span", { class: "brand-mark" }, growth.store.value.name[0]),
+            brandMark(),
             h("strong", growth.store.value.name),
             languageSelect(),
             themeToggle(),
@@ -1561,7 +1594,12 @@ createApp({
         ]),
       ]);
     }
+    function workspaceFooter(){return siteFooter({settings:growth.store.value,compact:true,lastSync:lastSync.value,onShop:()=>{
+      const url=new URL(location.href);url.port="5173";url.pathname="/";url.hash="";url.search=`?lang=${language.value}`;window.open(url.href,"_blank","noopener");
+    }});}
     const titles = {
+      profit:["Know what your store earns.","Track purchase costs, paid sales and recorded expenses."],
+      "delivery-partners":["Your delivery team, at a glance.","See availability, current assignments and parcel progress."],
       prices: [
         "A clear view of every price.",
         "Compare regular and selling prices over time, including scheduled offers.",
@@ -1583,6 +1621,7 @@ createApp({
         "Your shop, at a glance.",
         "A clear view of what’s moving and what needs your attention.",
       ],
+      products: ["Products", "Manage products, prices and stock in one place."],
       inventory: [
         "Good products. Well stocked.",
         "Manage your catalog and make stock adjustments in one place.",
@@ -1598,11 +1637,11 @@ createApp({
     };
     return () =>
       !token.value
-        ? loginView()
+        ? h("div",{class:"staff-login-page"},[loginView(),workspaceFooter()])
         : h("div", { class: "staff-app" }, [
             h("aside", { class: "sidebar" }, [
               h("div", { class: "brand" }, [
-                h("span", { class: "brand-mark" }, "S"),
+                brandMark(),
                 h("strong", growth.store.value.name),
                 languageSelect(),
                 themeToggle(),
@@ -1613,8 +1652,11 @@ createApp({
                 (
                   [
                     ["overview", "grid", "Overview"],
+                    ["profit", "chart", "Profit dashboard"],
                     ["inventory", "box", "Inventory"],
+                    ["products", "box", "Products"],
                     ["orders", "cart", "Orders"],
+                    ["delivery-partners", "truck", "Delivery partners"],
                     ["activity", "chart", "Stock activity"],
                     ["prices", "chart", "Price history"],
                     ["variants", "box", "Product variants"],
@@ -1629,7 +1671,8 @@ createApp({
                   h(
                     "button",
                     {
-                      class: page.value === key ? "selected" : "",
+                      class: [page.value === key ? "selected" : "",key==="products"?"nav-child":""],
+                      "aria-current":page.value===key?"page":undefined,
                       onClick: () => changePage(key),
                     },
                     [
@@ -1677,7 +1720,7 @@ createApp({
                     "strong",
                     page.value === "activity"
                       ? "Stock activity"
-                      : page.value[0].toUpperCase() + page.value.slice(1),
+                      : ({profit:"Profit dashboard",overview:"Overview",inventory:"Inventory",products:"Products",orders:"Orders","delivery-partners":"Delivery partners",activity:"Stock activity",prices:"Price history",variants:"Product variants",returns:"Returns & refunds",support:"Customer support",targets:"Sales targets",recovery:"Cart recovery",settings:"Store settings",staff:"Staff roles"})[page.value],
                   ),
                 ]),
                 h("div", { class: "workspace-status" }, [
@@ -1704,7 +1747,7 @@ createApp({
                   ),
                 ]),
               ]),
-              h("main", { class: "workspace-main" }, [
+              h("main", { id:"staff-workspace-top",tabindex:-1,class: "workspace-main" }, [
                 h("div", { class: "workspace-title" }, [
                   h("div", [
                     h(
@@ -1723,7 +1766,7 @@ createApp({
                       loading.value,
                       "refresh",
                     ),
-                    ["overview", "inventory", "variants"].includes(page.value)
+                    ["overview", "inventory", "products", "variants"].includes(page.value)
                       ? btn(
                           "Add product",
                           () => open("product"),
@@ -1740,7 +1783,7 @@ createApp({
                       btn("Dismiss", () => (error.value = ""), "text"),
                     ])
                   : null,
-                ...(["support","targets","recovery","settings","staff"].includes(page.value) ? growth.render(page.value) : page.value === "prices"
+                ...(["support","targets","recovery","settings","staff"].includes(page.value) ? growth.render(page.value) : page.value === "profit" ? [h(ProfitDashboard,{request,refreshTick:lastSync.value})] : page.value === "delivery-partners" ? [fleet.panel(true)] : page.value === "prices"
                   ? shopping.pricesPage()
                   : page.value === "variants"
                     ? shopping.variantsPage()
@@ -1748,10 +1791,11 @@ createApp({
                       ? shopping.returnsPage()
                       : page.value === "overview"
                         ? dashboard()
-                        : page.value === "inventory"
-                          ? inventory()
+                        : page.value === "inventory" || page.value === "products"
+                          ? inventory(page.value === "products")
                           : page.value === "orders"
                             ? [
+                                fleet.panel(),
                                 metrics(),
                                 h("section", { class: "card" }, [
                                   h("div", { class: "card-heading padded" }, [
@@ -1762,6 +1806,7 @@ createApp({
                                       `${orderTotal.value} orders`,
                                     ),
                                   ]),
+                                  h("form",{class:"padded",style:{display:"flex",gap:"12px",flexWrap:"wrap",alignItems:"center"},onSubmit:(e:Event)=>{e.preventDefault();applyOrderSearch();}},[h("input",{type:"search",value:orderSearch.value,placeholder:"Order number, tracking reference or customer name","aria-label":"Search staff orders",style:{flex:"1 1 260px",minWidth:0,padding:"12px 14px",border:"1px solid #cbd8ca",borderRadius:"10px",font:"inherit"},onInput:(e:Event)=>orderSearch.value=(e.target as HTMLInputElement).value}),h("button",{type:"submit",class:"btn primary"},"Search"),btn("Clear",()=>{orderSearch.value="";applyOrderSearch();},"secondary")]),
                                   ordersTable(),
                                   h("div", { class: "pager" }, [
                                     btn(
@@ -1803,15 +1848,7 @@ createApp({
                                   activityList(),
                                 ]),
                               ]),
-                h("footer", { class: "workspace-footer" }, [
-                  h("span", `${growth.store.value.name} staff workspace`),
-                  h(
-                    "span",
-                    lastSync.value
-                      ? `Last synced ${lastSync.value}`
-                      : "Connecting…",
-                  ),
-                ]),
+                workspaceFooter(),
               ]),
             ]),
             notice.value
@@ -1820,7 +1857,8 @@ createApp({
                   notice.value,
                 ])
               : null,
+            h(BackToTop,{focusTarget:"staff-workspace-top",hidden:!!modal.value}),
             dialog(),
           ]);
   },
-}).mount("#app");
+}).use(VueQueryPlugin,{queryClient:staffQueryClient}).mount("#app");

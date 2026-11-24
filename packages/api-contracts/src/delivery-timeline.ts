@@ -6,17 +6,20 @@ export const DELIVERY_STEPS = [
 ] as const;
 export type DeliveryStage = (typeof DELIVERY_STEPS)[number];
 type PriorTracking = {
+  dispatchedAt?:string;
+  awaitingPartner?:boolean;
   stage: string;
   history: Array<{ stage: string; at: string }>;
 };
 export type DeliveryTracking = {
   stage: DeliveryStage;
   mode: "automatic_demo";
+  awaitingPartner?:boolean;
   expectedDeliveryAt: string;
   nextUpdateAt: string | null;
   history: Array<{ stage: DeliveryStage; at: string }>;
 };
-const offsets = [0, 60 * 60_000, 5 * 60 * 60_000, 24 * 60 * 60_000];
+const offsets = [0, 60 * 60_000, 5 * 60 * 60_000, 15 * 60 * 60_000];
 
 /** Demo fulfillment is calculated from the saved confirmation time, including after server restarts. */
 export function deliveryTimeline(
@@ -35,6 +38,7 @@ export function deliveryTimeline(
     index,
     DELIVERY_STEPS.indexOf(prior?.stage as DeliveryStage),
   );
+  if(prior?.awaitingPartner && prior.stage!=="delivered") index=Math.min(index,1);
   const history: DeliveryTracking["history"] = [];
   DELIVERY_STEPS.forEach((stage, i) => {
     if (i > index) return;
@@ -51,9 +55,10 @@ export function deliveryTimeline(
   return {
     stage: DELIVERY_STEPS[index],
     mode: "automatic_demo",
+    awaitingPartner:prior?.awaitingPartner??false,
     expectedDeliveryAt: new Date(start + offsets[3]).toISOString(),
     nextUpdateAt:
-      index < 3 ? new Date(start + offsets[index + 1]).toISOString() : null,
+      index < 3 && !prior?.awaitingPartner ? new Date(start + offsets[index + 1]).toISOString() : null,
     history,
   };
 }

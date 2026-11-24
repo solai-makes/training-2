@@ -44,6 +44,9 @@ export type Recipient = {
   address: string;
   city: string;
   postalCode: string;
+  deliveryPreference?: "standard" | "call" | "reception" | "door" | "custom";
+  deliveryPhone?: string;
+  deliveryInstructions?: string;
 };
 export type Receipt = {
   storeName?: string;
@@ -53,6 +56,7 @@ export type Receipt = {
   currency: string;
   items: ReceiptItem[];
   subtotal: number;
+  deliveryPerson?:{id:string;name:string;code:string;sample:boolean;assignedAt:string};
   tracking?: Tracking;
   discount?: number;
   coupon?: { code: string; percent: number };
@@ -93,6 +97,7 @@ export const money = (n: number, currency = "JPY") =>
   new Intl.NumberFormat(locale(), {
     style: "currency",
     currency,
+    currencyDisplay: "narrowSymbol",
     maximumFractionDigits: currency === "INR" ? 2 : 0,
   }).format(n);
 export const date = (s: string) =>

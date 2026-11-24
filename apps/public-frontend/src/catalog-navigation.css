@@ -32,8 +32,8 @@
 }
 .subcategory-chips button[aria-pressed="true"] {
   color: white;
-  background: #285b42;
-  border-color: #285b42;
+  background: #212830;
+  border-color: #212830;
 }
 .subcategory-chips button:disabled {
   opacity: 0.45;
@@ -41,13 +41,13 @@
 }
 .subcategory-chips button:focus-visible,
 .page-number:focus-visible {
-  outline: 3px solid #d3a047;
+  outline: 3px solid #75aaff;
   outline-offset: 3px;
 }
 .subcategory-chips small {
   padding: 1px 6px;
   border-radius: 12px;
-  background: #899b831c;
+  background: #798ca51c;
   color: inherit;
   font-variant-numeric: tabular-nums;
 }
@@ -85,8 +85,8 @@
   cursor: pointer;
 }
 .catalog-page-navigation .page-number[aria-current="page"] {
-  background: #285b42;
-  border-color: #285b42;
+  background: #212830;
+  border-color: #212830;
   color: white;
   font-weight: 700;
 }

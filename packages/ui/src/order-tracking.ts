@@ -15,7 +15,8 @@ export const trackingLabel = (stage: string) =>
     delivered: "Delivered",
   })[stage] ?? stage;
 export type Tracking = {
-  mode?: "automatic_demo";
+  mode?: "automatic_demo" | "staff_dispatch";
+    awaitingPartner?: boolean;
   expectedDeliveryAt?: string;
   nextUpdateAt?: string | null;
   stage: TrackingStage;

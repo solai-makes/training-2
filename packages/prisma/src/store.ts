@@ -32,6 +32,9 @@ export type Shipping = {
   address: string;
   city: string;
   postalCode: string;
+  deliveryPreference?: "standard" | "call" | "reception" | "door" | "custom";
+  deliveryPhone?: string;
+  deliveryInstructions?: string;
 };
 export type TrackingStage =
   | "confirmed"
@@ -48,7 +51,8 @@ export type Receipt = {
   subtotal: number;
   tracking?: {
     stage: TrackingStage;
-    mode?: "automatic_demo";
+    mode?: "automatic_demo" | "staff_dispatch";
+    awaitingPartner?: boolean;
     expectedDeliveryAt?: string;
     nextUpdateAt?: string | null;
     history: Array<{ stage: TrackingStage; at: string }>;
@@ -147,7 +151,9 @@ async function orderRows(
   id: string | null,
   page: number,
   pageSize: number,
+  query = "",
 ) {
+  const term=query.trim().toLowerCase(),ref=term.replace(/^#|^ss-/g, "").replaceAll("-", "");
   const rows = await tx.$queryRaw<OrderRow[]>`
     SELECT o.id,o.status,o.customer_id AS "customerId",o.created_at AS "createdAt",o.updated_at AS "updatedAt",
       d.payload AS receipt, COALESCE(d.payload->'items', (
@@ -155,7 +161,7 @@ async function orderRows(
         FROM order_items i JOIN products p ON p.id=i.product_id WHERE i.order_id=o.id
       ), '[]'::jsonb) AS items
     FROM orders o LEFT JOIN store_order_details d ON d.order_id=o.id
-    WHERE (${customer}::text IS NULL OR o.customer_id=${customer}) AND (${id}::uuid IS NULL OR o.id=${id}::uuid)
+    WHERE (${customer}::text IS NULL OR o.customer_id=${customer}) AND (${id}::uuid IS NULL OR o.id=${id}::uuid) AND (${term}='' OR position(${ref} in replace(o.id::text,'-',''))>0 OR position(${term} in lower(o.customer_id))>0 OR position(${term} in lower(COALESCE(d.payload->'recipient'->>'name','')))>0)
     ORDER BY o.created_at DESC,o.id LIMIT ${pageSize} OFFSET ${(page - 1) * pageSize}`;
   return rows.map((row) => ({
     ...row,
@@ -176,13 +182,15 @@ export async function listOrders(
   customer: string | null,
   page = 1,
   pageSize = 20,
+  query = "",
 ) {
   return db.$transaction(
     async (tx) => {
-      const items = await orderRows(tx, customer, null, page, pageSize);
+      const term=query.trim().toLowerCase(),ref=term.replace(/^#|^ss-/g, "").replaceAll("-", "");
+      const items = await orderRows(tx, customer, null, page, pageSize, query);
       const count = await tx.$queryRaw<
         Array<{ total: bigint }>
-      >`SELECT count(*) AS total FROM orders WHERE (${customer}::text IS NULL OR customer_id=${customer})`;
+      >`SELECT count(*) AS total FROM orders o LEFT JOIN store_order_details d ON d.order_id=o.id WHERE (${customer}::text IS NULL OR o.customer_id=${customer}) AND (${term}='' OR position(${ref} in replace(o.id::text,'-',''))>0 OR position(${term} in lower(o.customer_id))>0 OR position(${term} in lower(COALESCE(d.payload->'recipient'->>'name','')))>0)`;
       return { items, total: Number(count[0].total), page, pageSize };
     },
     { isolationLevel: "RepeatableRead" },

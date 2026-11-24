@@ -1,0 +1,4 @@
+import {test} from "node:test";import assert from "node:assert/strict";import {countUpValue} from "./count-up.ts";
+test("starts at current value and finishes at the exact target",()=>{assert.equal(countUpValue(0,30030800,-50,1100),0);assert.equal(countUpValue(0,30030800,1100,1100),30030800);assert.equal(countUpValue(50,100,0,650),50);});
+test("increases and decreases smoothly without overshooting",()=>{let last=100;for(let t=0;t<=650;t+=10){const n=countUpValue(100,30,t,650);assert.ok(n<=last&&n>=30);last=n;}assert.equal(last,30);assert.ok(countUpValue(10,100,325,650)>55);});
+test("retargeting starts at the displayed value instead of zero",()=>{const shown=countUpValue(0,100,300,1100);assert.equal(countUpValue(shown,200,0,650),shown);assert.equal(countUpValue(shown,200,650,650),200);assert.equal(countUpValue(100,300,0,0),300);});

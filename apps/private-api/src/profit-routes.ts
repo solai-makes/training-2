@@ -1,0 +1,12 @@
+import {Hono} from 'hono';
+import {z} from '@hono/zod-openapi';
+import {profitReport,productCosts,saveProductCost,addProfitExpense} from '../../../packages/prisma/src/profit-report.ts';
+import {StoreError} from '../../../packages/prisma/src/store.ts';
+import {reportRange} from '../../../packages/api-contracts/src/report-range.ts';
+import type {Role} from '../../../packages/api-contracts/src/store-growth.ts';
+export const profitRoutes=new Hono<{Variables:{actor:string;role:Role}}>();
+const validDay=(day:string)=>{try{reportRange({from:day,to:day},new Date().toISOString().slice(0,10));}catch(e){throw new StoreError(400,'INVALID_INPUT',(e as Error).message);}};
+profitRoutes.get('/',async c=>{try{return c.json(await profitReport(Number(c.req.query('days')??30),c.req.query('from')!==undefined||c.req.query('to')!==undefined?{from:c.req.query('from')??'',to:c.req.query('to')??''}:undefined,c.req.query('simulated')==='true'));}catch(e){if(e instanceof RangeError)throw new StoreError(400,'INVALID_INPUT',e.message);throw e;}});
+profitRoutes.get('/costs',async c=>c.json({items:await productCosts((c.req.query('search')??'').slice(0,100))}));
+profitRoutes.post('/costs',async c=>{const input=z.object({productId:z.uuid(),unitCost:z.number().int().min(0).max(100000000),effectiveOn:z.string()}).strict().safeParse(await c.req.json().catch(()=>null));if(!input.success)throw new StoreError(400,'INVALID_INPUT','Enter a product, whole-yen cost and effective date.');validDay(input.data.effectiveOn);await saveProductCost(input.data.productId,input.data.unitCost,input.data.effectiveOn,c.get('actor'));return c.json({saved:true});});
+profitRoutes.post('/expenses',async c=>{const input=z.object({id:z.uuid(),day:z.string(),amount:z.number().int().min(1).max(100000000),label:z.string().trim().min(1).max(120)}).strict().safeParse(await c.req.json().catch(()=>null));if(!input.success)throw new StoreError(400,'INVALID_INPUT','Enter an expense label, date and positive whole-yen amount.');validDay(input.data.day);await addProfitExpense(input.data.id,input.data.day,input.data.amount,input.data.label,c.get('actor'));return c.json({saved:true});});
