@@ -50,6 +50,7 @@ type Args = {
   from?: unknown;
   to?: unknown;
   simulated?: unknown;
+  estimateMissingCosts?: unknown;
 };
 const parse = <T>(schema: z.ZodType<T>, value: unknown): T => {
   const parsed = schema.safeParse(value);
@@ -383,6 +384,7 @@ export async function executeStaffOperation(
           r.days,
           r.custom,
           parse(z.boolean(), args.simulated ?? false),
+          parse(z.boolean(), args.estimateMissingCosts ?? true),
         );
       }
       case "staffProductCosts":

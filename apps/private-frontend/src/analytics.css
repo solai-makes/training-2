@@ -37,3 +37,12 @@
 .price-chart-premium svg{overflow:visible}
 @media(max-width:640px){.price-chart-premium{padding:20px 14px;border-radius:18px}.price-chart-premium .price-premium-secondary{gap:20px}.price-chart-premium .price-premium-secondary b{font-size:18px}.price-chart-premium .price-chart-controls{align-items:stretch}.price-chart-premium .price-chart-tabs{width:100%}.price-chart-premium .price-chart-tabs button{flex:1}.price-chart-premium .price-chart-tooltip{width:200px;max-width:calc(100% - 20px)}}
 
+/* One palette for chart segments, lines and their legends. */
+.sales-dashboard,.profit-page{--chart-primary:#397de0;--chart-secondary:#526780;--chart-grid:#e1e7f0;--chart-muted:#536b86;--chart-area:rgba(57,125,224,.12);--chart-surface:#fff}
+html[data-theme=dark] .sales-dashboard,html[data-theme=dark] .profit-page{--chart-primary:#75aaff;--chart-secondary:#a0b5d1;--chart-grid:#2e3d51;--chart-muted:#b6c7de;--chart-area:rgba(117,170,255,.14);--chart-surface:#121417}
+.sales-donut>div{background:var(--chart-surface)}
+.ranking-action{margin-left:auto;flex-shrink:0;min-height:36px;cursor:pointer;white-space:normal;max-width:40%;overflow-wrap:anywhere}
+.ranking-action:disabled{cursor:not-allowed;opacity:.5}
+.revenue-readout{display:flex;justify-content:space-between;align-items:center;gap:20px;min-height:76px;box-sizing:border-box;margin:18px 0 12px;padding:12px 16px;border:1px solid var(--chart-grid);border-radius:12px;background:var(--chart-surface);font-variant-numeric:tabular-nums}
+.revenue-readout>div{display:grid;gap:6px;min-width:0}.revenue-readout>div:last-child{text-align:right}.revenue-readout small{color:var(--chart-muted);font-size:12px}.revenue-readout strong{font-size:22px;line-height:1.2;color:var(--chart-primary);overflow-wrap:anywhere}.revenue-readout span{font-size:13px}.revenue-chart{font-variant-numeric:tabular-nums}.revenue-interactive .revenue-line{animation:none;transition:none}
+@media(max-width:440px){.revenue-readout{gap:12px;padding:12px;min-height:94px}.revenue-readout strong{font-size:18px}.revenue-readout small{font-size:11px}}

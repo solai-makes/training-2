@@ -43,6 +43,7 @@ export function salesDashboard(
   setDays: (days: number | "custom") => void,
   onError: (message: string) => void,
   controls?:{from:string;to:string;loading:boolean;onFrom:(value:string)=>void;onTo:(value:string)=>void;onApply:()=>void;onClear?:()=>void},
+  actions?:{canEdit:boolean;onReview:(id:string)=>void;onRestock:(id:string)=>void},
 ) {
   if (!report)
     return h("section", { class: "card sales-dashboard" }, [
@@ -85,8 +86,8 @@ export function salesDashboard(
                 mode === "best"
                   ? h("b", money(row.revenue ?? 0))
                   : h(
-                      "span",
-                      { class: `badge ${mode === "low" ? "low" : ""}` },
+                      "button",
+                      { type:"button",class:"btn secondary small ranking-action",disabled:!actions?.canEdit,"aria-label":t(mode==="low"?"Restock":"Review")+" · "+row.name,onClick:()=>{if(!actions?.canEdit)return;if(mode==="low")actions.onRestock(row.id);else actions.onReview(row.id);} },
                       mode === "low" ? "Restock" : "Review",
                     ),
               ]),
@@ -227,9 +228,9 @@ export function salesDashboard(
             class: "sales-donut",
             style: {
               background:
-                "conic-gradient(#e4ac45 0 " +
+                "conic-gradient(var(--chart-primary) 0 " +
                 (r.revenue ? (r.demoRevenue / r.revenue) * 100 : 0) +
-                "%,#397c52 0 100%)",
+                "%,var(--chart-secondary) 0 100%)",
             },
           },
           [
@@ -247,7 +248,7 @@ export function salesDashboard(
             ["Other sales", r.revenue - r.demoRevenue, ""],
           ].map(([label, value, tone]) =>
             h("div", [
-              h("i", { class: `legend-dot ${tone}` }),
+              h("i", { class: `legend-dot ${tone}`,style:{background:tone==="demo"?"var(--chart-primary)":"var(--chart-secondary)"} }),
               h("span", String(label)),
               h("b", money(Number(value))),
             ]),

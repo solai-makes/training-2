@@ -13,3 +13,13 @@ export const profitLabels:Array<[string,string,string,string]>=[
 ['Amount (JPY)','தொகை (JPY)','金額（JPY）','金额（日元）'],
 ['Search','தேடு','検索','搜索'],['Save','சேமி','保存','保存']
 ];
+profitLabels.push(
+ ['Latest day','சமீபத்திய நாள்','直近の日付','最近一天'],
+ ['Product costs','பொருள் செலவுகள்','商品原価','商品成本'],
+ ['Blue: product revenue · Slate: profit after recorded expenses','நீலம்: பொருள் வருவாய் · சாம்பல் நீலம்: செலவுகளுக்குப் பின் லாபம்','青：商品売上・スレート：記録経費差引後利益','蓝色：商品收入 · 灰蓝色：扣除已录费用后利润'],
+ ['Estimate 25% margin when cost is missing','செலவு இல்லாவிட்டால் 25% லாபத்தை மதிப்பிடு','原価未登録時は利益率25%で概算','缺少成本时按25%利润率估算'],
+ ['Missing costs use a 25% estimated margin. Saved costs take priority; recorded expenses are deducted.','செலவு இல்லாத பொருட்களுக்கு 25% லாப மதிப்பீடு. சேமித்த செலவுகளுக்கு முன்னுரிமை; பதிவான செலவுகள் கழிக்கப்படும்.','未登録原価は利益率25%で概算します。登録原価を優先し、記録済み経費を差し引きます。','未录入成本时按25%利润率估算；优先采用已保存成本，并扣除已录入费用。'],
+ ['Estimated units','மதிப்பிட்ட எண்ணிக்கை','概算対象数量','估算数量'],
+ ['Includes estimates','மதிப்பீடுகள் உள்ளன','概算を含む','包含估算'],
+ ['25% default margin','இயல்புநிலை லாபம் 25%','標準利益率25%','默认利润率25%']
+);

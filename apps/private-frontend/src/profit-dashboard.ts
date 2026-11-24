@@ -1,37 +1,545 @@
-import {defineComponent,onMounted,ref,watch,type PropType} from 'vue';
-import {h,t} from '../../../packages/ui/src/language.ts';
-import {money} from '../../../packages/ui/src/storefront.ts';
-import type {profitReport} from '../../../packages/prisma/src/profit-report.ts';
-import './profit-dashboard.css';
-type Report=Awaited<ReturnType<typeof profitReport>>;
-type Cost={id:string;name:string;code:string;unitCost:number|null;effectiveOn:string|null};
-export const ProfitDashboard=defineComponent({props:{refreshTick:{type:String,default:""},request:{type:Function as PropType<(path:string,options?:RequestInit)=>Promise<any>>,required:true}},setup(props){
- const report=ref<Report|null>(null),costs=ref<Cost[]>([]),days=ref('30'),from=ref(''),to=ref(''),simulated=ref(false),search=ref(''),loading=ref(false),saving=ref(false),error=ref(''),notice=ref('');
- const today=new Date().toLocaleDateString('en-CA'),costDate=ref(today),drafts=ref<Record<string,string>>({}),expenseLabel=ref(''),expenseAmount=ref(''),expenseDate=ref(today);let expenseId=crypto.randomUUID();
- const button=(label:string,click:()=>void,disabled=false)=>h('button',{type:'button',class:'btn secondary',disabled,onClick:click},label);
- let activeQuery="days=30&simulated=false";
- async function load(apply=true){if(loading.value)return;loading.value=true;error.value='';try{if(apply){const q=new URLSearchParams(days.value==='custom'?{from:from.value,to:to.value}:{days:days.value});q.set('simulated',String(simulated.value));activeQuery=q.toString();}report.value=await props.request('/store/profit?'+activeQuery);}catch(e){error.value=(e as Error).message;}finally{loading.value=false;}}
- async function loadCosts(){try{const result=await props.request('/store/profit/costs?search='+encodeURIComponent(search.value));costs.value=result.items;}catch(e){error.value=(e as Error).message;}}
- async function saveCost(c:Cost){const value=drafts.value[c.id];if(value===undefined||value.trim()===''||!Number.isInteger(Number(value))||Number(value)<0){error.value='Enter a nonnegative whole-yen purchase cost.';return;}saving.value=true;error.value='';notice.value='';try{await props.request('/store/profit/costs',{method:'POST',body:JSON.stringify({productId:c.id,unitCost:Number(value),effectiveOn:costDate.value})});delete drafts.value[c.id];notice.value='Purchase cost saved.';await loadCosts();await load(false);}catch(e){error.value=(e as Error).message;}finally{saving.value=false;}}
- async function saveExpense(){if(!expenseLabel.value.trim()||!Number.isInteger(Number(expenseAmount.value))||Number(expenseAmount.value)<=0){error.value='Enter an expense label, date and positive whole-yen amount.';return;}saving.value=true;error.value='';notice.value='';try{await props.request('/store/profit/expenses',{method:'POST',body:JSON.stringify({id:expenseId,day:expenseDate.value,label:expenseLabel.value,amount:Number(expenseAmount.value)})});expenseId=crypto.randomUUID();expenseLabel.value='';expenseAmount.value='';notice.value='Expense recorded.';await load(false);}catch(e){error.value=(e as Error).message;}finally{saving.value=false;}}
- watch(()=>props.refreshTick,()=>{if(!saving.value)void load(false);});
- onMounted(()=>{void load();void loadCosts();});
- const field=(label:string,node:any)=>h('label',{class:'profit-field'},[h('span',label),node]);
- const input=(value:string,onInput:(value:string)=>void,attrs:Record<string,unknown>={})=>h('input',{...attrs,value,onInput:(e:Event)=>onInput((e.target as HTMLInputElement).value)});
- const display=(value:number|null)=>value===null?t('Add missing costs'):money(value);
- function chart(r:Report){const rows=r.daily,W=800,H=220,pad=38,values=rows.flatMap(d=>[d.revenue,d.profit??0]),min=Math.min(0,...values),max=Math.max(1,...values),x=(i:number)=>pad+i/Math.max(1,rows.length-1)*(W-pad*2),y=(v:number)=>H-pad-(v-min)/(max-min)*(H-pad*2);return h('div',{class:'profit-trend'},[h('h2','Revenue & profit trend'),h('p','Blue: product revenue · Green: profit after recorded expenses'),h('svg',{viewBox:`0 0 ${W} ${H}`,role:'img','aria-label':t('Revenue & profit trend')},[h('line',{x1:pad,x2:W-pad,y1:y(0),y2:y(0),stroke:'#9bada6','stroke-dasharray':'4 4'}),h('polyline',{points:rows.map((d,i)=>`${x(i)},${y(d.revenue)}`).join(' '),fill:'none',stroke:'#229eff','stroke-width':3}),...rows.map((d,i)=>h('g',[h('circle',{cx:x(i),cy:y(d.revenue),r:4,fill:'#229eff'},[h('title',d.day+' · '+money(d.revenue))]),d.profit===null?null:h('circle',{cx:x(i),cy:y(d.profit),r:4,fill:'#3b9467'},[h('title',d.day+' · '+money(d.profit))]),i>0&&d.profit!==null&&rows[i-1].profit!==null?h('line',{x1:x(i-1),x2:x(i),y1:y(rows[i-1].profit!),y2:y(d.profit),stroke:'#3b9467','stroke-width':3}):null])),h('text',{x:pad,y:H-8,fill:'currentColor','font-size':11},r.from),h('text',{x:W-pad,y:H-8,'text-anchor':'end',fill:'currentColor','font-size':11},r.to)])]);}
- return()=>h('section',{class:'profit-page'},[
- h('div',{class:'profit-toolbar'},[field('Period',h('select',{value:days.value,onChange:(e:Event)=>days.value=(e.target as HTMLSelectElement).value},[['7','7 days'],['15','15 days'],['30','30 days'],['custom','Custom dates']].map(([value,label])=>h('option',{value},label)))),...(days.value==='custom'?[field('From',input(from.value,v=>from.value=v,{type:'date',max:today})),field('To',input(to.value,v=>to.value=v,{type:'date',max:today})),button('Clear dates',()=>{from.value='';to.value='';})]:[]),h('label',{class:'profit-check'},[h('input',{type:'checkbox',checked:simulated.value,onChange:(e:Event)=>simulated.value=(e.target as HTMLInputElement).checked}),t('Include simulated payments')]),button(loading.value?'Loading…':'Apply',()=>void load(),loading.value)]),
- error.value?h('p',{class:'error-banner',role:'alert'},error.value):null,notice.value?h('p',{class:'tools-note',role:'status'},notice.value):null,
- report.value?h('div',[
- h('div',{class:'profit-kpis'},[['Product revenue',money(report.value.revenue)],['Known product costs',money(report.value.cost)],['Gross profit',display(report.value.grossProfit)],['Profit after recorded expenses',display(report.value.netProfit)]].map(([label,value])=>h('article',{class:'card'},[h('small',label),h('strong',value)]))),
- h('p',{class:'tools-note'},report.value.missingUnits?`${report.value.missingUnits} units need a purchase cost. Profit is incomplete; a missing cost is not treated as zero.`:`${report.value.paidOrders} paid orders · ${report.value.refundedOrders} refunded orders · ${report.value.pendingOrders} unpaid/unknown orders excluded · ${report.value.excludedSimulated} simulated orders excluded.`),
- h('p',{class:'fine-print'},'JPY estimate for orders confirmed in this period, using their current payment/refund status. Revenue excludes tax and delivery charges. Discounts and loyalty are deducted. Refunds remove revenue; restocked returns reverse product cost. Unsaleable returns retain their cost. Only entered expenses are deducted; this is not an accounting or tax report.'),
- h('div',{class:'card profit-section'},[chart(report.value)]),
- h('div',{class:'card profit-section'},[h('h2','Profit by product'),h('div',{class:'profit-table-wrap'},[h('table',[h('thead',[h('tr',['Product','Units sold','Product revenue','Known product costs','Gross profit'].map(s=>h('th',s)))]),h('tbody',report.value.products.length?report.value.products.map(p=>h('tr',[h('td',p.name),h('td',String(p.units)),h('td',money(p.revenue)),h('td',money(p.cost)),h('td',display(p.profit))])):[h('tr',[h('td',{colspan:5},'No paid sales in this period.')])])])])]),
- ]):null,
- h('div',{class:'profit-edit-grid'},[
- h('section',{class:'card profit-section'},[h('h2','Purchase costs'),h('p','Costs are private to staff. Choose when a cost applies; earlier sales require an earlier effective date. Later entries keep the previous cost history.'),h('div',{class:'profit-toolbar'},[field('Search products',input(search.value,v=>search.value=v,{type:'search'})),button('Search',()=>void loadCosts()),field('Cost effective date',input(costDate.value,v=>costDate.value=v,{type:'date',max:today}))]),h('p',{class:'fine-print'},'Showing up to 40 matches. Search by product name or code; variants have their own costs.'),h('div',{class:'profit-cost-list'},costs.value.map(c=>h('div',{class:'profit-cost-row'},[h('div',[h('strong',c.name),h('small',c.code+' · '+(c.unitCost===null?t('Cost missing'):money(c.unitCost))+(c.effectiveOn?' · '+c.effectiveOn:''))]),input(drafts.value[c.id]??'',v=>drafts.value[c.id]=v,{type:'number',min:0,step:1,max:100000000,'aria-label':t('Purchase cost')+' · '+c.name,placeholder:t('Purchase cost')}),button('Save',()=>void saveCost(c),saving.value)])))]),
- h('section',{class:'card profit-section'},[h('h2','Recorded expenses'),h('p','Record packaging, delivery fees, payment fees or other operating costs. Enter costs once.'),field('Description',input(expenseLabel.value,v=>expenseLabel.value=v,{maxlength:120})),field('Amount (JPY)',input(expenseAmount.value,v=>expenseAmount.value=v,{type:'number',min:1,step:1,max:100000000})),field('Date',input(expenseDate.value,v=>expenseDate.value=v,{type:'date',max:today})),button('Record expense',()=>void saveExpense(),saving.value),h('p',t('Total expenses')+': '+money(report.value?.expenses??0)),...(report.value?.expensesList??[]).map(e=>h('div',{class:'profit-expense-row'},[h('span',e.day+' · '+e.label),h('strong',money(e.amount))]))])
- ])]);
-}});
+import { defineComponent, onMounted, ref, watch, type PropType } from "vue";
+import { h, t } from "../../../packages/ui/src/language.ts";
+import { money } from "../../../packages/ui/src/storefront.ts";
+import type { profitReport } from "../../../packages/prisma/src/profit-report.ts";
+import "./profit-dashboard.css";
+type Report = Awaited<ReturnType<typeof profitReport>>;
+type Cost = {
+  id: string;
+  name: string;
+  code: string;
+  unitCost: number | null;
+  effectiveOn: string | null;
+};
+export const ProfitDashboard = defineComponent({
+  props: {
+    refreshTick: { type: String, default: "" },
+    request: {
+      type: Function as PropType<
+        (path: string, options?: RequestInit) => Promise<any>
+      >,
+      required: true,
+    },
+  },
+  setup(props) {
+    const report = ref<Report | null>(null),
+      costs = ref<Cost[]>([]),
+      days = ref("30"),
+      from = ref(""),
+      to = ref(""),
+      simulated = ref(false),
+      estimateMissingCosts = ref(true),
+      search = ref(""),
+      loading = ref(false),
+      saving = ref(false),
+      error = ref(""),
+      notice = ref("");
+    const today = new Date().toLocaleDateString("en-CA"),
+      costDate = ref(today),
+      drafts = ref<Record<string, string>>({}),
+      expenseLabel = ref(""),
+      expenseAmount = ref(""),
+      expenseDate = ref(today);
+    let expenseId = crypto.randomUUID();
+    const button = (label: string, click: () => void, disabled = false) =>
+      h(
+        "button",
+        { type: "button", class: "btn secondary", disabled, onClick: click },
+        label,
+      );
+    let activeQuery = "days=30&simulated=false&estimateMissingCosts=true";
+    async function load(apply = true) {
+      if (loading.value) return;
+      loading.value = true;
+      error.value = "";
+      try {
+        if (apply) {
+          const q = new URLSearchParams(
+            days.value === "custom"
+              ? { from: from.value, to: to.value }
+              : { days: days.value },
+          );
+          q.set("simulated", String(simulated.value));
+          q.set("estimateMissingCosts", String(estimateMissingCosts.value));
+          activeQuery = q.toString();
+        }
+        report.value = await props.request("/store/profit?" + activeQuery);
+      } catch (e) {
+        error.value = (e as Error).message;
+      } finally {
+        loading.value = false;
+      }
+    }
+    async function loadCosts() {
+      try {
+        const result = await props.request(
+          "/store/profit/costs?search=" + encodeURIComponent(search.value),
+        );
+        costs.value = result.items;
+      } catch (e) {
+        error.value = (e as Error).message;
+      }
+    }
+    async function saveCost(c: Cost) {
+      const value = drafts.value[c.id];
+      if (
+        value === undefined ||
+        value.trim() === "" ||
+        !Number.isInteger(Number(value)) ||
+        Number(value) < 0
+      ) {
+        error.value = "Enter a nonnegative whole-yen purchase cost.";
+        return;
+      }
+      saving.value = true;
+      error.value = "";
+      notice.value = "";
+      try {
+        await props.request("/store/profit/costs", {
+          method: "POST",
+          body: JSON.stringify({
+            productId: c.id,
+            unitCost: Number(value),
+            effectiveOn: costDate.value,
+          }),
+        });
+        delete drafts.value[c.id];
+        notice.value = "Purchase cost saved.";
+        await loadCosts();
+        await load(false);
+      } catch (e) {
+        error.value = (e as Error).message;
+      } finally {
+        saving.value = false;
+      }
+    }
+    async function saveExpense() {
+      if (
+        !expenseLabel.value.trim() ||
+        !Number.isInteger(Number(expenseAmount.value)) ||
+        Number(expenseAmount.value) <= 0
+      ) {
+        error.value =
+          "Enter an expense label, date and positive whole-yen amount.";
+        return;
+      }
+      saving.value = true;
+      error.value = "";
+      notice.value = "";
+      try {
+        await props.request("/store/profit/expenses", {
+          method: "POST",
+          body: JSON.stringify({
+            id: expenseId,
+            day: expenseDate.value,
+            label: expenseLabel.value,
+            amount: Number(expenseAmount.value),
+          }),
+        });
+        expenseId = crypto.randomUUID();
+        expenseLabel.value = "";
+        expenseAmount.value = "";
+        notice.value = "Expense recorded.";
+        await load(false);
+      } catch (e) {
+        error.value = (e as Error).message;
+      } finally {
+        saving.value = false;
+      }
+    }
+    watch(
+      () => props.refreshTick,
+      () => {
+        if (!saving.value) void load(false);
+      },
+    );
+    onMounted(() => {
+      void load();
+      void loadCosts();
+    });
+    const field = (label: string, node: any) =>
+      h("label", { class: "profit-field" }, [h("span", label), node]);
+    const input = (
+      value: string,
+      onInput: (value: string) => void,
+      attrs: Record<string, unknown> = {},
+    ) =>
+      h("input", {
+        ...attrs,
+        value,
+        onInput: (e: Event) => onInput((e.target as HTMLInputElement).value),
+      });
+    const display = (value: number | null) =>
+      value === null ? t("Add missing costs") : money(value);
+    function chart(r: Report) {
+      const rows = r.daily,
+        W = 800,
+        H = 220,
+        pad = 38,
+        values = rows.flatMap((d) => [d.revenue, d.profit ?? 0]),
+        min = Math.min(0, ...values),
+        max = Math.max(1, ...values),
+        x = (i: number) =>
+          pad + (i / Math.max(1, rows.length - 1)) * (W - pad * 2),
+        y = (v: number) => H - pad - ((v - min) / (max - min)) * (H - pad * 2);
+      return h("div", { class: "profit-trend" }, [
+        h("h2", "Revenue & profit trend"),
+        h("p", "Blue: product revenue · Slate: profit after recorded expenses"),
+        h(
+          "svg",
+          {
+            viewBox: `0 0 ${W} ${H}`,
+            role: "img",
+            "aria-label": t("Revenue & profit trend"),
+          },
+          [
+            h("line", {
+              x1: pad,
+              x2: W - pad,
+              y1: y(0),
+              y2: y(0),
+              stroke: "var(--chart-grid)",
+              "stroke-dasharray": "4 4",
+            }),
+            h("polyline", {
+              points: rows.map((d, i) => `${x(i)},${y(d.revenue)}`).join(" "),
+              fill: "none",
+              stroke: "var(--chart-primary)",
+              "stroke-width": 3,
+            }),
+            ...rows.map((d, i) =>
+              h("g", [
+                h(
+                  "circle",
+                  {
+                    cx: x(i),
+                    cy: y(d.revenue),
+                    r: 4,
+                    fill: "var(--chart-primary)",
+                  },
+                  [h("title", d.day + " · " + money(d.revenue))],
+                ),
+                d.profit === null
+                  ? null
+                  : h(
+                      "circle",
+                      {
+                        cx: x(i),
+                        cy: y(d.profit),
+                        r: 4,
+                        fill: "var(--chart-secondary)",
+                      },
+                      [h("title", d.day + " · " + money(d.profit))],
+                    ),
+                i > 0 && d.profit !== null && rows[i - 1].profit !== null
+                  ? h("line", {
+                      x1: x(i - 1),
+                      x2: x(i),
+                      y1: y(rows[i - 1].profit!),
+                      y2: y(d.profit),
+                      stroke: "var(--chart-secondary)",
+                      "stroke-width": 3,
+                    })
+                  : null,
+              ]),
+            ),
+            h(
+              "text",
+              { x: pad, y: H - 8, fill: "currentColor", "font-size": 11 },
+              r.from,
+            ),
+            h(
+              "text",
+              {
+                x: W - pad,
+                y: H - 8,
+                "text-anchor": "end",
+                fill: "currentColor",
+                "font-size": 11,
+              },
+              r.to,
+            ),
+          ],
+        ),
+      ]);
+    }
+    return () =>
+      h("section", { class: "profit-page" }, [
+        h("div", { class: "profit-toolbar" }, [
+          field(
+            "Period",
+            h(
+              "select",
+              {
+                value: days.value,
+                onChange: (e: Event) =>
+                  (days.value = (e.target as HTMLSelectElement).value),
+              },
+              [
+                ["7", "7 days"],
+                ["15", "15 days"],
+                ["30", "30 days"],
+                ["custom", "Custom dates"],
+              ].map(([value, label]) => h("option", { value }, label)),
+            ),
+          ),
+          ...(days.value === "custom"
+            ? [
+                field(
+                  "From",
+                  input(from.value, (v) => (from.value = v), {
+                    type: "date",
+                    max: today,
+                  }),
+                ),
+                field(
+                  "To",
+                  input(to.value, (v) => (to.value = v), {
+                    type: "date",
+                    max: today,
+                  }),
+                ),
+                button("Clear dates", () => {
+                  from.value = "";
+                  to.value = "";
+                }),
+              ]
+            : []),
+          h("label", { class: "profit-check" }, [
+            h("input", {
+              type: "checkbox",
+              checked: simulated.value,
+              onChange: (e: Event) =>
+                (simulated.value = (e.target as HTMLInputElement).checked),
+            }),
+            t("Include simulated payments"),
+          ]),
+          h("label", { class: "profit-check" }, [
+            h("input", {
+              type: "checkbox",
+              checked: estimateMissingCosts.value,
+              onChange: (event: Event) =>
+                (estimateMissingCosts.value = (
+                  event.target as HTMLInputElement
+                ).checked),
+            }),
+            t("Estimate 25% margin when cost is missing"),
+          ]),
+          button(
+            loading.value ? "Loading…" : "Apply",
+            () => void load(),
+            loading.value,
+          ),
+        ]),
+        error.value
+          ? h("p", { class: "error-banner", role: "alert" }, error.value)
+          : null,
+        notice.value
+          ? h("p", { class: "tools-note", role: "status" }, notice.value)
+          : null,
+        report.value
+          ? h("div", [
+              h(
+                "div",
+                { class: "profit-kpis" },
+                [
+                  ["Product revenue", money(report.value.revenue)],
+                  ["Product costs", money(report.value.cost)],
+                  ["Gross profit", display(report.value.grossProfit)],
+                  [
+                    "Profit after recorded expenses",
+                    display(report.value.netProfit),
+                  ],
+                ].map(([label, value]) =>
+                  h("article", { class: "card" }, [
+                    h("small", label),
+                    h("strong", value),
+                  ]),
+                ),
+              ),
+              h(
+                "p",
+                { class: "tools-note" },
+                report.value.missingUnits
+                  ? `${report.value.missingUnits} units need a purchase cost. Profit is incomplete; a missing cost is not treated as zero.`
+                  : `${report.value.paidOrders} paid orders · ${report.value.refundedOrders} refunded orders · ${report.value.pendingOrders} unpaid/unknown orders excluded · ${report.value.excludedSimulated} simulated orders excluded.`,
+              ),
+              report.value.estimatedUnits
+                ? h("p", { class: "tools-note" }, [
+                    t(
+                      "Missing costs use a 25% estimated margin. Saved costs take priority; recorded expenses are deducted.",
+                    ),
+                    " ",
+                    t("Estimated units"),
+                    ": ",
+                    String(report.value.estimatedUnits),
+                  ])
+                : null,
+              h(
+                "p",
+                { class: "fine-print" },
+                "JPY estimate for orders confirmed in this period, using their current payment/refund status. Revenue excludes tax and delivery charges. Discounts and loyalty are deducted. Refunds remove revenue; restocked returns reverse product cost. Unsaleable returns retain their cost. Only entered expenses are deducted; this is not an accounting or tax report.",
+              ),
+              h("div", { class: "card profit-section" }, [chart(report.value)]),
+              h("div", { class: "card profit-section" }, [
+                h("h2", "Profit by product"),
+                h("div", { class: "profit-table-wrap" }, [
+                  h("table", [
+                    h("thead", [
+                      h(
+                        "tr",
+                        [
+                          "Product",
+                          "Units sold",
+                          "Product revenue",
+                          "Product costs",
+                          "Gross profit",
+                        ].map((s) => h("th", s)),
+                      ),
+                    ]),
+                    h(
+                      "tbody",
+                      report.value.products.length
+                        ? report.value.products.map((p) =>
+                            h("tr", [
+                              h("td", [
+                                p.name,
+                                p.estimatedUnits
+                                  ? h(
+                                      "small",
+                                      { class: "profit-estimate-tag" },
+                                      t("Includes estimates"),
+                                    )
+                                  : null,
+                              ]),
+                              h("td", String(p.units)),
+                              h("td", money(p.revenue)),
+                              h("td", money(p.cost)),
+                              h("td", display(p.profit)),
+                            ]),
+                          )
+                        : [
+                            h("tr", [
+                              h(
+                                "td",
+                                { colspan: 5 },
+                                "No paid sales in this period.",
+                              ),
+                            ]),
+                          ],
+                    ),
+                  ]),
+                ]),
+              ]),
+            ])
+          : null,
+        h("div", { class: "profit-edit-grid" }, [
+          h("section", { class: "card profit-section" }, [
+            h("h2", "Purchase costs"),
+            h(
+              "p",
+              "Costs are private to staff. Choose when a cost applies; earlier sales require an earlier effective date. Later entries keep the previous cost history.",
+            ),
+            h("div", { class: "profit-toolbar" }, [
+              field(
+                "Search products",
+                input(search.value, (v) => (search.value = v), {
+                  type: "search",
+                }),
+              ),
+              button("Search", () => void loadCosts()),
+              field(
+                "Cost effective date",
+                input(costDate.value, (v) => (costDate.value = v), {
+                  type: "date",
+                  max: today,
+                }),
+              ),
+            ]),
+            h(
+              "p",
+              { class: "fine-print" },
+              "Showing up to 40 matches. Search by product name or code; variants have their own costs.",
+            ),
+            h(
+              "div",
+              { class: "profit-cost-list" },
+              costs.value.map((c) =>
+                h("div", { class: "profit-cost-row" }, [
+                  h("div", [
+                    h("strong", c.name),
+                    h(
+                      "small",
+                      c.code +
+                        " · " +
+                        (c.unitCost === null
+                          ? t(
+                              estimateMissingCosts.value
+                                ? "25% default margin"
+                                : "Cost missing",
+                            )
+                          : money(c.unitCost)) +
+                        (c.effectiveOn ? " · " + c.effectiveOn : ""),
+                    ),
+                  ]),
+                  input(
+                    drafts.value[c.id] ?? "",
+                    (v) => (drafts.value[c.id] = v),
+                    {
+                      type: "number",
+                      min: 0,
+                      step: 1,
+                      max: 100000000,
+                      "aria-label": t("Purchase cost") + " · " + c.name,
+                      placeholder: t("Purchase cost"),
+                    },
+                  ),
+                  button("Save", () => void saveCost(c), saving.value),
+                ]),
+              ),
+            ),
+          ]),
+          h("section", { class: "card profit-section" }, [
+            h("h2", "Recorded expenses"),
+            h(
+              "p",
+              "Record packaging, delivery fees, payment fees or other operating costs. Enter costs once.",
+            ),
+            field(
+              "Description",
+              input(expenseLabel.value, (v) => (expenseLabel.value = v), {
+                maxlength: 120,
+              }),
+            ),
+            field(
+              "Amount (JPY)",
+              input(expenseAmount.value, (v) => (expenseAmount.value = v), {
+                type: "number",
+                min: 1,
+                step: 1,
+                max: 100000000,
+              }),
+            ),
+            field(
+              "Date",
+              input(expenseDate.value, (v) => (expenseDate.value = v), {
+                type: "date",
+                max: today,
+              }),
+            ),
+            button("Record expense", () => void saveExpense(), saving.value),
+            h(
+              "p",
+              t("Total expenses") + ": " + money(report.value?.expenses ?? 0),
+            ),
+            ...(report.value?.expensesList ?? []).map((e) =>
+              h("div", { class: "profit-expense-row" }, [
+                h("span", e.day + " · " + e.label),
+                h("strong", money(e.amount)),
+              ]),
+            ),
+          ]),
+        ]),
+      ]);
+  },
+});

@@ -389,6 +389,8 @@ createApp({
         });
       modal.value = type;
     }
+    function salesActions(){return {canEdit:growth.can('catalog:write'),onReview:(id:string)=>openDashboardProduct(id,'product'),onRestock:(id:string)=>openDashboardProduct(id,'stock')};}
+    function openDashboardProduct(id:string,type:'product'|'stock'){if(!growth.can('catalog:write'))return;const product=products.value.find(item=>item.id===id);if(!product){error.value='Product no longer exists.';return;}open(type,product);}
     function close() {
       if (!busy.value) modal.value = null;
     }
@@ -775,6 +777,7 @@ createApp({
           setSalesDays,
           (message) => (error.value = message),
           salesControls(),
+          salesActions(),
         ),
         metrics(),
         chartView(),
@@ -902,6 +905,7 @@ createApp({
           setSalesDays,
           (message) => (error.value = message),
           salesControls(),
+          salesActions(),
         ),
         metrics(),
         chartView()]),
