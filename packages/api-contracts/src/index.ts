@@ -41,7 +41,7 @@ export const ProductUpdateInput = z
     offerEndsAt: z.iso.datetime().nullable().optional(),
     price: z.number().int().min(0).max(9999999),
     stock: z.number().int().min(0).max(2147483647),
-    expectedUpdatedAt: z.iso.datetime().optional(),
+    expectedUpdatedAt: z.iso.datetime({ offset: true }).optional(),
   })
   .strict()
   .refine(

@@ -18,7 +18,8 @@ let qaUsername;
 const cognito=new CognitoIdentityProviderClient({endpoint:process.env.COGNITO_LOCAL_ENDPOINT,region:'local',credentials:{accessKeyId:'local',secretAccessKey:'local'}}),{poolId}=JSON.parse(await readFile(new URL('../../../.local/cognito.json',import.meta.url),'utf8'));
 try{
  const product=await call('createStaffProduct',{input:{name:label,description:'Isolated test product',price:1200,stock:10,category:'Tech & audio'}});assert.equal(product.stock,10);
- const updated=await call('updateStaffProduct',{id:product.id,input:{name:label,description:'Isolated test product',price:1300,stock:10,category:'Tech & audio',expectedUpdatedAt:product.updatedAt}});assert.equal(updated.price,1300);
+ const catalogResponse=await fetch(origin+'/graphql',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+admin},body:JSON.stringify({query:'query ProductEdit($id:UUID!){allInventoryProducts(first:1,condition:{rowId:$id}){nodes{updatedAt}}}',variables:{id:product.id}})});const catalogBody=await catalogResponse.json();assert.equal(catalogBody.errors,undefined);const catalogUpdatedAt=catalogBody.data.allInventoryProducts.nodes[0].updatedAt;assert.ok(/(?:Z|[+-]\d{2}:\d{2})$/.test(catalogUpdatedAt));
+ const updated=await call('updateStaffProduct',{id:product.id,input:{name:label,description:'Isolated test product',price:1300,stock:10,category:'Tech & audio',expectedUpdatedAt:catalogUpdatedAt}});assert.equal(updated.price,1300);
  await rejected('updateStaffProduct',{id:product.id,input:{name:label,price:1300,stock:10,expectedUpdatedAt:'2000-01-01T00:00:00.000Z'}},'CONFLICT');
  await call('adjustStaffStock',{id:product.id,input:{delta:-2,reason:'Isolated GraphQL test'}});assert.equal((await db.products.findUnique({where:{id:product.id}})).stock,8);
  await rejected('adjustStaffStock',{id:product.id,input:{delta:0,reason:'Invalid'}},'INVALID_INPUT');
