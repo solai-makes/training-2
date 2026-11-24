@@ -14,7 +14,7 @@ The staff business features now use PostGraphile GraphQL queries and mutations. 
 
 ## Validation
 
-Local checks: 49 unit tests, TypeScript checks, application builds, read-only catalog parity checks and 69 isolated GraphQL lifecycle checks passed. The lifecycle checks require a database named training3_qa and do not run against your original store data.
+Local checks: 51 unit tests, TypeScript checks, application builds, read-only catalog parity checks and 69 isolated GraphQL lifecycle checks passed. The lifecycle checks require a database named training3_qa and do not run against your original store data.
 
 The final GitHub run, GHCR digest and local pull verification are recorded in docs/training3-verification.md after publication.
 
@@ -73,3 +73,7 @@ The mutation test exercises optimistic edit conflicts, stock, variants, duplicat
 - https://tanstack.com/query/latest/docs/framework/vue/overview
 - https://github.com/graffle-js/graffle/tree/graphql-request
 - https://docs.github.com/en/actions/tutorials/publish-packages/publish-docker-images
+
+## Windows/Linux migration fingerprints
+
+SQL fingerprints now normalize line endings. Applied SQL content is still checked strictly. For a legacy database with mixed line endings, normalize-migrations.mjs can reconcile metadata only when the original source bytes match the recorded fingerprint and the released SQL is identical after newline normalization. It never reruns migrations or changes store records. Keep the previous migration sources until this check is complete.

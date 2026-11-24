@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import {migrationChecksum,matchesMigrationChecksum} from "../../../packages/postgres/src/migration-checksum.ts";
 import { readFile } from "node:fs/promises";
 import { Pool } from "pg";
 
@@ -17,13 +17,13 @@ try {
     new URL(`../../../packages/postgres/migrations/${name}`, import.meta.url),
     "utf8",
   );
-  const checksum = createHash("sha256").update(sql).digest("hex");
+  const checksum = migrationChecksum(sql);
   const prior = await client.query(
     "SELECT checksum FROM schema_migrations WHERE name=$1",
     [name],
   );
   if (prior.rowCount) {
-    if (prior.rows[0].checksum !== checksum)
+    if (!matchesMigrationChecksum(sql,prior.rows[0].checksum))
       throw new Error(
         "Store growth migration checksum differs. Existing data was preserved.",
       );

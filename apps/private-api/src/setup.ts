@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import {migrationChecksum,matchesMigrationChecksum} from "../../../packages/postgres/src/migration-checksum.ts";
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import {
   AdminAddUserToGroupCommand,
@@ -40,13 +40,13 @@ try {
     .filter((name) => name.endsWith(".sql"))
     .sort()) {
     const sql = await readFile(new URL(name, directory), "utf8");
-    const checksum = createHash("sha256").update(sql).digest("hex");
+    const checksum = migrationChecksum(sql);
     const applied = await connection.query(
       "SELECT checksum FROM schema_migrations WHERE name = $1",
       [name],
     );
     if (applied.rowCount) {
-      if (applied.rows[0].checksum !== checksum)
+      if (!matchesMigrationChecksum(sql,applied.rows[0].checksum))
         throw new Error(`Applied migration changed: ${name}`);
       continue;
     }

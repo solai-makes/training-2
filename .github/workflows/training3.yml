@@ -50,6 +50,7 @@ jobs:
           docker exec training3-qa node apps/private-api/src/graphql.integration.mjs
           docker exec training3-qa node apps/private-api/src/staff-graphql.integration.mjs
           docker exec training3-qa node apps/private-api/src/automatic-delivery.test.mjs
+          docker exec training3-qa node apps/private-api/src/migration-checksum.integration.mjs
       - name: Runtime diagnostics
         if: failure()
         run: docker logs training3-qa || true
