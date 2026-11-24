@@ -10,26 +10,26 @@ Verified on 2026-11-24 (Japan time).
 | graphql-request and TanStack Vue Query on the staff client | Complete |
 | Remaining Axios login request wrapped in Vue Query | Complete |
 | CI type checking | Passed |
-| CI unit and integration tests | Passed: 51 unit tests, 69 lifecycle checks, automatic-delivery and migration-safety regressions |
+| CI unit and integration tests | Passed: 53 unit tests, 69 lifecycle checks, automatic-delivery and migration-safety regressions |
 | CI application build | Passed |
 | CI Docker image creation | Passed |
 | CI push to GHCR | Passed |
 | Pull the published image locally and run containers | Passed |
 
-CI: https://github.com/solai-makes/training-2/actions/runs/45341243511
+CI: https://github.com/solai-makes/training-2/actions/runs/45344586854
 
-Source commit: 90575796903bff2f1fd12a9f16e2337908d000d1
+Source commit: 66068d06de3e28668603c2af5a86cdc06ef5669e
 
 Branch: training3/graphql-migration. Main was not modified.
 
 Published tags:
 
 - ghcr.io/solai-makes/training-2:training3
-- ghcr.io/solai-makes/training-2:sha-90575796903bff2f1fd12a9f16e2337908d000d1
+- ghcr.io/solai-makes/training-2:sha-66068d06de3e28668603c2af5a86cdc06ef5669e
 
 Pulled registry digest:
 
-    sha256:1c319f1d885bddaa2544ad5386ce3c6a3783f8d4875cd39c9d07c21443a512cf
+    sha256:b0666ca74975c5093c79d96b50d9909880af17a824f54a57e4b567cd28900582
 
 The local Compose app runs the GHCR-pulled training3 tag and reports healthy. Both API health endpoints and the authenticated read-only GraphQL parity check passed after the pull.
 
@@ -43,3 +43,7 @@ These image previews use their own database/auth volumes. The original developme
 During the first local pull test, two legacy migration fingerprints differed because their original files mixed Windows and Linux line endings. The reconciliation tool verified all 23 released SQL files against the original sources before updating only those two fingerprints. No migrations were rerun and no store records were changed. Regression tests verify that changed SQL or unknown fingerprints are rejected and rolled back.
 
 This verification-only follow-up uses [skip ci]; it does not change the tested application code or published image.
+
+## Product edit regression
+
+The save validator accepts valid ISO timestamps with timezone offsets, including the fractional precision returned by PostGraphile. It still rejects malformed timestamps and stale edits. The lifecycle test now loads the optimistic-edit timestamp from the GraphQL catalog before saving, matching the staff UI path. The corrected image was pulled and the local preview reports healthy.

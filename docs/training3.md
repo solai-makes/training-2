@@ -14,7 +14,7 @@ The staff business features now use PostGraphile GraphQL queries and mutations. 
 
 ## Validation
 
-Local checks: 51 unit tests, TypeScript checks, application builds, read-only catalog parity checks and 69 isolated GraphQL lifecycle checks passed. The lifecycle checks require a database named training3_qa and do not run against your original store data.
+Local checks: 53 unit tests, TypeScript checks, application builds, read-only catalog parity checks and 69 isolated GraphQL lifecycle checks passed. The lifecycle checks require a database named training3_qa and do not run against your original store data.
 
 The final GitHub run, GHCR digest and local pull verification are recorded in docs/training3-verification.md after publication.
 
