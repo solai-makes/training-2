@@ -1,3 +1,4 @@
+import { verifiedPrincipal } from "../../private-api/src/auth.ts";
 import { roleFor } from "../../../packages/prisma/src/store-growth.ts";
 import { customerSession } from "./customer-auth.ts";
 import { readFile } from "node:fs/promises";
@@ -57,7 +58,18 @@ export async function verifyCustomerToken(token: string) {
     throw new Error("Administrator accounts cannot use customer routes");
   }
 
-  if(await roleFor({sub:payload.sub,admin:false,username:typeof payload.username === "string" ? payload.username : payload.sub})) throw new Error("Staff accounts cannot use customer routes");
+  if (
+    await roleFor({
+      sub: payload.sub,
+      admin: false,
+      username: await verifiedPrincipal(
+        token,
+        payload.sub,
+        typeof payload.username === "string" ? payload.username : payload.sub,
+      ),
+    })
+  )
+    throw new Error("Staff accounts cannot use customer routes");
   return {
     sub: payload.sub,
   };

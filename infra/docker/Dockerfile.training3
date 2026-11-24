@@ -1,0 +1,17 @@
+FROM node:26.10.0-bookworm-slim AS build
+RUN npm install --global pnpm@12.9.1
+WORKDIR /app
+COPY . .
+RUN --mount=type=cache,id=training3-pnpm,target=/root/.local/share/pnpm/store pnpm install --frozen-lockfile
+RUN pnpm --filter @training2/prisma exec prisma generate
+RUN pnpm build
+
+FROM node:26.10.0-bookworm-slim AS runtime
+LABEL org.opencontainers.image.source="https://github.com/solai-makes/training-2"
+WORKDIR /app
+ENV NODE_ENV=production SHOP_DEMO_PAYMENTS=1
+COPY --from=build --chown=node:node /app /app
+RUN mkdir -p /app/.local && chown node:node /app/.local
+USER node
+EXPOSE 8080 8081
+CMD ["node","infra/docker/start-runtime.mjs"]

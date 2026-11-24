@@ -1,0 +1,16 @@
+import { bodyLimit } from "hono/body-limit";
+import {z} from "@hono/zod-openapi";
+import {Hono} from "hono";
+import {wishlist,saveWishlist,removeWishlist,notificationFeed,readNotifications} from "../../../packages/prisma/src/customer-activity.ts";
+import {StoreError} from "../../../packages/prisma/src/store.ts";
+export const activityRoutes=new Hono<{Variables:{customerId:string}}>();
+const uuid=(value:string)=>{const parsed=z.uuid().safeParse(value);if(!parsed.success)throw new StoreError(400,"INVALID_ID","Invalid record ID.");return parsed.data;};
+activityRoutes.use("/wishlist/import",bodyLimit({maxSize:16000}));
+activityRoutes.get("/wishlist",async c=>c.json({items:await wishlist(c.get("customerId"))}));
+activityRoutes.post("/wishlist/import",async c=>{const parsed=z.object({productIds:z.array(z.uuid()).max(200)}).strict().safeParse(await c.req.json().catch(()=>null));if(!parsed.success)throw new StoreError(400,"INVALID_WISHLIST","Choose up to 200 valid products.");return c.json(await saveWishlist(c.get("customerId"),parsed.data.productIds));});
+activityRoutes.post("/wishlist/:id",async c=>c.json(await saveWishlist(c.get("customerId"),[uuid(c.req.param("id"))],true),201));
+activityRoutes.delete("/wishlist/:id",async c=>{await removeWishlist(c.get("customerId"),uuid(c.req.param("id")));return c.body(null,204);});
+activityRoutes.get("/notifications",async c=>c.json(await notificationFeed(c.get("customerId"))));
+activityRoutes.post("/notifications/read-all",async c=>{await readNotifications(c.get("customerId"));return c.body(null,204);});
+activityRoutes.post("/notifications/:id/read",async c=>{await readNotifications(c.get("customerId"),uuid(c.req.param("id")));return c.body(null,204);});
+activityRoutes.onError((e,c)=>e instanceof StoreError?c.json({code:e.code,message:e.message},e.status):c.json({code:"INTERNAL_ERROR",message:"Unable to load your saved products or notifications. Please retry."},500));

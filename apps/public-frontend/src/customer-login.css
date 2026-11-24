@@ -2,3 +2,6 @@
 .customer-login-dialog .tools-actions { display:flex; flex-wrap:wrap; gap:12px; margin:16px 0; }
 .customer-login-dialog .fine-print { line-height:1.65; }
 .customer-login-dialog .btn { white-space:normal; }
+
+.customer-login-tabs{display:flex;gap:12px;flex-wrap:wrap;margin:20px 0}.customer-login-tabs .btn{flex:1}.customer-password-wrap{position:relative;display:flex;align-items:center;width:100%;min-width:0}.customer-password-wrap input{width:100%;padding-inline-end:58px!important;box-sizing:border-box}.customer-password-eye{position:absolute;inset-inline-end:7px;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:42px;height:42px;background:transparent;border:0;border-radius:9px;color:inherit;cursor:pointer}.customer-password-eye:focus-visible{outline:2px solid #75aaff}.customer-login-dialog .field>label{font-weight:600}.customer-login-success{padding:12px;border-radius:10px;background:#e5ebf2;color:#1d232b}.customer-account-email{overflow-wrap:anywhere}
+.customer-login-dialog .btn.text{display:block;width:100%;margin-block:12px;padding:10px 12px;text-align:center;line-height:1.5}

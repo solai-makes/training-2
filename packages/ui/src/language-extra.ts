@@ -1,4 +1,28 @@
 export const extraLabels: Array<[string, string, string, string]> = [
+["Search staff orders","ஊழியர் ஆர்டர்களைத் தேடு","スタッフ注文検索","搜索员工订单"],
+["Order number, tracking reference or customer name","ஆர்டர் எண், கண்காணிப்பு எண் அல்லது வாடிக்கையாளர் பெயர்","注文番号・追跡番号・顧客名","订单号、追踪编号或客户姓名"],
+["Clear","அழி","クリア","清除"],
+["Shop the room","அறையிலிருந்து வாங்குங்கள்","お部屋から選ぶ","场景购物"],
+["Profit dashboard","லாபப் பலகை","利益ダッシュボード","利润看板"],
+["Know what your store earns.","உங்கள் கடையின் வருமானத்தை அறியுங்கள்.","店舗の収益を把握。","了解店铺收益。"],
+["Track purchase costs, paid sales and recorded expenses.","கொள்முதல் செலவு, செலுத்திய விற்பனை மற்றும் செலவுகளைக் கண்காணியுங்கள்.","仕入原価・支払済み売上・記録経費を確認。","跟踪采购成本、已付款销售和已记费用。"],
+["Product revenue","பொருள் வருவாய்","商品売上","商品收入"],
+["Known product costs","பதிவான பொருள் செலவுகள்","登録済み商品原価","已知商品成本"],
+["Gross profit","மொத்த லாபம்","売上総利益","毛利润"],
+["Profit after recorded expenses","பதிவான செலவுகளுக்குப் பின் லாபம்","記録経費差引後の利益","扣除已记费用后利润"],
+["Add missing costs","விடுபட்ட செலவுகளைச் சேர்க்கவும்","未登録原価を追加","添加缺失成本"],
+["Purchase costs","கொள்முதல் செலவுகள்","仕入原価","采购成本"],
+["Purchase cost","கொள்முதல் செலவு","仕入原価","采购成本"],
+["Cost missing","செலவு பதிவு இல்லை","原価未登録","成本缺失"],
+["Cost effective date","செலவு பொருந்தும் தேதி","原価適用日","成本生效日期"],
+["Recorded expenses","பதிவான செலவுகள்","記録済み経費","已记费用"],
+["Record expense","செலவைப் பதிவு செய்","経費を記録","记录费用"],
+["Total expenses","மொத்த செலவுகள்","経費合計","费用合计"],
+["Revenue & profit trend","வருவாய் மற்றும் லாப நிலவரம்","売上・利益推移","收入与利润趋势"],
+["Profit by product","பொருள் வாரியான லாபம்","商品別利益","各商品利润"],
+["Include simulated payments","உருவகக் கட்டணங்களையும் சேர்","模擬決済を含める","包含模拟付款"],
+["Units sold","விற்ற எண்ணிக்கை","販売数","售出数量"],
+["No paid sales in this period.","இந்தக் காலத்தில் செலுத்திய விற்பனை இல்லை.","期間内に支払済み売上はありません。","此期间无已付款销售。"],
   ["Product category", "பொருள் வகை", "商品カテゴリー", "商品分类"],
   [
     "Regular price (JPY)",
@@ -152,7 +176,7 @@ export const extraLabels: Array<[string, string, string, string]> = [
   [
     "Continue to demo payment",
     "மாதிரிக் கட்டணத்திற்குச் செல்லவும்",
-    "デモ決済へ進む",
+    "シミュレーション決済へ進む",
     "继续演示付款",
   ],
   [
@@ -176,7 +200,7 @@ export const extraLabels: Array<[string, string, string, string]> = [
   [
     "Demo checkout uses fictional details and never charges money.",
     "மாதிரிக் கொள்முதல் கற்பனை விவரங்களைப் பயன்படுத்துகிறது; பணம் பிடிக்கப்படாது.",
-    "デモ決済は架空の情報を使用し、請求は発生しません。",
+    "シミュレーション決済は架空の情報を使用し、請求は発生しません。",
     "演示结账使用虚拟信息，绝不会扣款。",
   ],
   [

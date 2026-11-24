@@ -1,0 +1,1 @@
+UPDATE store_delivery_people SET experience_years=COALESCE(experience_years,2+substring(code from '[0-9]+$')::int%9),rating=COALESCE(rating,3+substring(code from '[0-9]+$')::int%3) WHERE sample=true AND code ~ '^SAMPLE-[0-9]+$';

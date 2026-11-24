@@ -5,7 +5,7 @@ const stored = localStorage.getItem("solaistore.theme");
 const dark = ref(
   stored
     ? stored === "dark"
-    : matchMedia("(prefers-color-scheme: dark)").matches,
+    : true,
 );
 function update() {
   document.documentElement.dataset.theme = dark.value ? "dark" : "light";

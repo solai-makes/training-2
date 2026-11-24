@@ -1,3 +1,4 @@
+import {activityRoutes} from "./activity-routes.ts";
 import { customerGrowthRoutes } from "./growth-routes.ts";
 import { settings as publicStoreSettings } from "../../../packages/prisma/src/store-growth.ts";
 import { bodyLimit } from "hono/body-limit";
@@ -104,6 +105,7 @@ app.use("/account/growth/*",bodyLimit({maxSize:32000}));
 app.route("/account/growth",customerGrowthRoutes);
 app.get("/store/settings",async c=>c.json(await publicStoreSettings()));
 app.route("/account", shoppingRoutes);
+app.route("/account", activityRoutes);
 app.use("/orders", requireCustomer);
 app.use("/orders/*", requireCustomer);
 app.use("/checkout", requireCustomer);

@@ -1,3 +1,6 @@
+import {deliverySummary} from "../../../packages/ui/src/delivery-preferences.ts";
+import { ceoSignature } from "./ceo-signature.ts";
+import { t } from "../../../packages/ui/src/language.ts";
 import type { Receipt } from "../../../packages/ui/src/storefront.ts";
 import { date, money } from "../../../packages/ui/src/storefront.ts";
 
@@ -68,6 +71,9 @@ export function imagePdf(
 }
 export async function createReceiptPdf(receipt: Receipt): Promise<Blob> {
   await document.fonts.ready;
+  const signature = new Image();
+  signature.src = ceoSignature;
+  await signature.decode();
   const canvases: HTMLCanvasElement[] = [];
   let canvas: HTMLCanvasElement,
     ctx!: CanvasRenderingContext2D,
@@ -81,12 +87,14 @@ export async function createReceiptPdf(receipt: Receipt): Promise<Blob> {
     weight = 400,
     align: CanvasTextAlign = "left",
   ) {
+    value = t(value);
     ctx.font = `${weight} ${size}px "Segoe UI", "Noto Sans", sans-serif`;
     ctx.fillStyle = color;
     ctx.textAlign = align;
     ctx.fillText(value, x, top);
   }
   function wrap(value: string, width: number, size = 10): string[] {
+    value = t(value);
     ctx.font = `400 ${size}px "Segoe UI", "Noto Sans", sans-serif`;
     const lines: string[] = [];
     let line = "";
@@ -194,6 +202,8 @@ export async function createReceiptPdf(receipt: Receipt): Promise<Blob> {
       text(line, 40, y);
       y += 15;
     }
+    const instructions=deliverySummary(receipt.recipient);
+    if(instructions){for(const line of wrap(instructions,500,9)){text(line,40,y,9);y+=13;}}
     y += 19;
   }
   tableHeader();
@@ -222,26 +232,44 @@ export async function createReceiptPdf(receipt: Receipt): Promise<Blob> {
       rule(y - 13);
     }
   }
-  if (y + 260 > 739) newPage();
+  if (y + 300 > 739) newPage();
   y += 12;
   for (const [label, value] of [
     ["Subtotal", money(receipt.subtotal)],
     ...(receipt.coupon && receipt.discount
-      ? [[`Coupon (${receipt.coupon.percent}%)`, `−${money(receipt.discount)}`]]
+      ? [
+          [
+            `Coupon (${receipt.coupon.percent}%)`,
+            `- ${money(receipt.discount)}`,
+          ],
+        ]
       : []),
-    ...(receipt.loyalty?.discount ? [[`Loyalty points (${receipt.loyalty.pointsRedeemed})`,`−${money(receipt.loyalty.discount)}`]] : []),
-    ["Estimated tax (10%)", money(receipt.tax)],
-    ["Delivery", "Free"],
+    ...(receipt.loyalty?.discount
+      ? [
+          [
+            `Loyalty points (${receipt.loyalty.pointsRedeemed})`,
+            `- ${money(receipt.loyalty.discount)}`,
+          ],
+        ]
+      : []),
+    ["Estimated tax (10%)", `+ ${money(receipt.tax)}`],
+    [
+      receipt.shipping === 0 ? "Delivery (Free)" : "Delivery",
+      `+ ${money(receipt.shipping)}`,
+    ],
   ]) {
-    text(label, 350, y, 10, "#68776c");
+    const labelLines = wrap(t(label), 170, 10);
+    labelLines.forEach((line, index) =>
+      text(line, 350, y + index * 14, 10, "#68776c"),
+    );
     text(value, 545, y, 10, "#243c34", 400, "right");
-    y += 22;
+    y += Math.max(22, labelLines.length * 14 + 8);
   }
   y += 7;
   ctx.fillStyle = "#edf3ee";
   ctx.fillRect(338, y - 17, 217, 39);
   text("TOTAL (JPY)", 350, y + 8, 11, "#173c31", 700);
-  text(money(receipt.total), 545, y + 8, 17, "#173c31", 700, "right");
+  text(`= ${money(receipt.total)}`, 545, y + 8, 17, "#173c31", 700, "right");
   y += 60;
   if (receipt.coupon) {
     text(`Coupon applied: ${receipt.coupon.code}`, 40, y, 9, "#68776c");
@@ -273,6 +301,23 @@ export async function createReceiptPdf(receipt: Receipt): Promise<Blob> {
     y,
     9,
     "#68776c",
+  );
+  if (y + 80 > 760) newPage();
+  const signatureY = Math.max(y + 12, 650);
+  ctx.drawImage(signature, 350, 170, 324, 45, 385, signatureY, 160, 23);
+  ctx.strokeStyle = "#b8c7bc";
+  ctx.beginPath();
+  ctx.moveTo(380, signatureY + 39);
+  ctx.lineTo(555, signatureY + 39);
+  ctx.stroke();
+  text(
+    `CEO of ${receipt.storeName ?? "Solaistore"}`,
+    467.5,
+    signatureY + 57,
+    10,
+    "#3b5445",
+    600,
+    "center",
   );
   for (let i = 0; i < canvases.length; i++) {
     ctx = canvases[i].getContext("2d")!;

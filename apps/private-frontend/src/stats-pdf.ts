@@ -34,6 +34,7 @@ export async function createStatsPdf(report: SalesReport): Promise<Blob> {
     bold = false,
     align: CanvasTextAlign = "left",
   ) => {
+    value=t(value);
     ctx.font = `${bold ? 700 : 400} ${size}px system-ui, sans-serif`;
     ctx.textAlign = align;
     ctx.textBaseline = "alphabetic";
@@ -83,6 +84,7 @@ export async function createStatsPdf(report: SalesReport): Promise<Blob> {
     return `${out}…`;
   };
   const wrap = (value: string, width: number, size = 9) => {
+    value=t(value);
     ctx.font = `400 ${size}px system-ui, sans-serif`;
     const rows: string[] = [];
     let row = "";
@@ -129,6 +131,7 @@ export async function createStatsPdf(report: SalesReport): Promise<Blob> {
     peak = r.daily.find((d) => d.revenue === maxDaily && maxDaily > 0),
     active = r.daily.filter((d) => d.orders > 0).length;
   const period = `${date(r.from)} — ${date(r.to, true)}`;
+  const reportPageCount=2+Math.max(1,Math.ceil(r.daily.length/24));
   function page(index: number, title: string, subtitle: string, dark = false) {
     const canvas = document.createElement("canvas");
     canvas.width = W * S;
@@ -157,7 +160,7 @@ export async function createStatsPdf(report: SalesReport): Promise<Blob> {
     text(subtitle, 32, 95, 9, dark ? "#cbdbd1" : c.muted);
     line(32, 797, 563, 797);
     text(`SOLAISTORE  /  JPY  /  ${period}`, 32, 812, 7.3, c.muted);
-    text(`${index} / 3`, 563, 812, 8, c.muted, true, "right");
+    text(`${index} / ${reportPageCount}`, 563, 812, 8, c.muted, true, "right");
     text(
       `Generated ${new Date(r.generatedAt).toLocaleString("en-GB")} · Demo sales are fictional; no money was charged.`,
       32,
@@ -185,7 +188,8 @@ export async function createStatsPdf(report: SalesReport): Promise<Blob> {
     value: string,
     note: string,
     accent = false,
-  ) {
+  ) 
+  {
     rect(x, y, 259.5, 78, accent ? c.mint : c.white, 11, c.line);
     rect(x + 15, y + 16, 3, 43, accent ? c.green : c.gold, 1);
     text(fit(t(label), 220, 8.5, true), x + 28, y + 23, 8.5, c.muted, true);
@@ -507,19 +511,21 @@ export async function createStatsPdf(report: SalesReport): Promise<Blob> {
     c.muted,
   );
 
+  for(let offset=0;offset<r.daily.length;offset+=24){
+  const dailyRows=r.daily.slice(offset,offset+24);
   page(
-    3,
+    3+offset/24,
     "The figures behind the view.",
     `Daily ledger · ${period} · Values in JPY`,
   );
   const yHeader = 120,
-    rowH = r.daily.length > 15 ? 16 : 26;
+    rowH = dailyRows.length > 15 ? 18 : 26;
   rect(32, yHeader, 531, 30, c.navy, 7);
   text("DATE", 48, 140, 8, c.white, true);
   text("ORDERS", 292, 140, 8, c.white, true, "right");
   text("ORDER VALUE", 432, 140, 8, c.white, true, "right");
   text("PERIOD SHARE", 547, 140, 8, c.white, true, "right");
-  r.daily.forEach((d, i) => {
+  dailyRows.forEach((d, i) => {
     const y = 150 + i * rowH;
     if (i % 2 === 0) rect(32, y, 531, rowH, c.white);
     const baseline = y + rowH * 0.69;
@@ -544,7 +550,7 @@ export async function createStatsPdf(report: SalesReport): Promise<Blob> {
       "right",
     );
   });
-  const totalY = 150 + r.daily.length * rowH;
+  const totalY = 150 + dailyRows.length * rowH;
   rect(32, totalY, 531, 29, c.mint, 6);
   text("PERIOD TOTAL", 48, totalY + 19, 8.5, c.ink, true);
   text(num(r.orders), 292, totalY + 19, 9, c.ink, true, "right");
@@ -570,6 +576,7 @@ export async function createStatsPdf(report: SalesReport): Promise<Blob> {
   definitions.forEach((value) => {
     noteY += paragraph(value, 32, noteY, 531, 7.8, c.muted, 11) + 5;
   });
+  }
   // Every page is exported as a high-resolution image inside a real A4 PDF.
   const images = pages.map((canvas) => ({
     width: canvas.width,

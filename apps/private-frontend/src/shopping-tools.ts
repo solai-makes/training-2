@@ -1,3 +1,4 @@
+import {PriceHistoryChart} from "./price-history-chart.ts";
 import type { Ref } from "vue";
 import { computed, reactive, ref, watch } from "vue";
 import { h, locale } from "../../../packages/ui/src/language.ts";
@@ -221,116 +222,7 @@ export function useStaffShopping(
       ),
     ]);
   }
-  function priceChart(data: PriceReport) {
-    const points = data.points;
-    if (!points.length)
-      return h(
-        "div",
-        { class: "tools-empty" },
-        "Price tracking has not started for this product.",
-      );
-    const W = 860,
-      H = 300,
-      left = 88,
-      right = 24,
-      top = 20,
-      bottom = 48;
-    const first = Date.parse(points[0].at),
-      last = Math.max(first + 1, Date.parse(points[points.length - 1].at)),
-      max =
-        Math.max(1, ...points.flatMap((p) => [p.regular, p.selling])) * 1.15;
-    const x = (at: string) =>
-        left + ((Date.parse(at) - first) / (last - first)) * (W - left - right),
-      y = (value: number) => H - bottom - (value / max) * (H - top - bottom);
-    const path = (key: "regular" | "selling") =>
-      points
-        .map((p, i) =>
-          i
-            ? `H${x(p.at).toFixed(2)}V${y(p[key]).toFixed(2)}`
-            : `M${x(p.at).toFixed(2)},${y(p[key]).toFixed(2)}`,
-        )
-        .join(" ");
-    return h(
-      "svg",
-      {
-        viewBox: `0 0 ${W} ${H}`,
-        class: "price-history-chart",
-        role: "img",
-        "aria-label": `${data.product.name}: regular and selling prices in Japanese yen`,
-      },
-      [
-        ...Array.from({ length: 5 }, (_, i) => {
-          const value = (max * i) / 4;
-          return h("g", [
-            h("line", {
-              x1: left,
-              x2: W - right,
-              y1: y(value),
-              y2: y(value),
-              stroke: "#dfe8df",
-              "stroke-dasharray": "3 5",
-            }),
-            h(
-              "text",
-              {
-                x: left - 12,
-                y: y(value) + 4,
-                "text-anchor": "end",
-                class: "price-axis",
-              },
-              money(Math.round(value)),
-            ),
-          ]);
-        }),
-        ...Array.from({ length: 4 }, (_, i) => {
-          const time = first + ((last - first) * i) / 3;
-          return h(
-            "text",
-            {
-              x: left + ((W - left - right) * i) / 3,
-              y: H - 15,
-              "text-anchor": i === 0 ? "start" : i === 3 ? "end" : "middle",
-              class: "price-axis",
-            },
-            new Date(time).toLocaleString(locale(), {
-              day: "2-digit",
-              month: "short",
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-          );
-        }),
-        h("path", {
-          d: path("regular"),
-          fill: "none",
-          stroke: "#d1a64a",
-          "stroke-width": 2,
-          "stroke-dasharray": "6 5",
-        }),
-        h("path", {
-          d: path("selling"),
-          fill: "none",
-          stroke: "#377c54",
-          "stroke-width": 3,
-          "stroke-linejoin": "round",
-        }),
-        ...points.slice(-100).map((p) =>
-          h(
-            "circle",
-            {
-              cx: x(p.at),
-              cy: y(p.selling),
-              r: 4,
-              fill: "#377c54",
-              stroke: "white",
-              "stroke-width": 2,
-            },
-            h("title", `${date(p.at)} · ${money(p.selling)} · ${p.reason}`),
-          ),
-        ),
-      ],
-    );
-  }
+  function priceChart(data:PriceReport){return h(PriceHistoryChart,{key:data.product.id,report:data});}
   function pricesPage() {
     const data = report.value;
     return [
@@ -365,40 +257,6 @@ export function useStaffShopping(
         ]),
         data
           ? h("div", [
-              h(
-                "div",
-                { class: "price-history-kpis" },
-                [
-                  ["Current selling price", money(data.product.price)],
-                  [
-                    "Lowest observed",
-                    money(
-                      Math.min(
-                        ...data.points.map((p) => p.selling),
-                        data.product.price,
-                      ),
-                    ),
-                  ],
-                  [
-                    "Highest observed",
-                    money(
-                      Math.max(
-                        ...data.points.map((p) => p.selling),
-                        data.product.price,
-                      ),
-                    ),
-                  ],
-                ].map(([label, value]) =>
-                  h("div", [h("small", label), h("strong", value)]),
-                ),
-              ),
-              h("div", { class: "tools-panel-heading" }, [
-                h("h2", "Regular price & selling price"),
-                h("div", { class: "price-history-legend" }, [
-                  h("span", { class: "regular" }, "Regular"),
-                  h("span", { class: "selling" }, "Selling"),
-                ]),
-              ]),
               priceChart(data),
               h(
                 "p",
@@ -447,7 +305,7 @@ export function useStaffShopping(
     const parent = products.value.find((p) => p.id === variantParent.value);
     return [
       alert(),
-      h("div", { class: "tools-two-column" }, [
+      h("div", { class: "tools-two-column variants-layout" }, [
         h("section", { class: "card tools-panel" }, [
           picker(
             variantParent.value,
@@ -457,6 +315,7 @@ export function useStaffShopping(
             standardProducts.value,
             "Standard product",
           ),
+          h("div",{class:"variant-summary"},[["Standard stock",parent?.stock??0],["Product options",variants.value.length],["Total available",(parent?.stock??0)+variants.value.reduce((sum,v)=>sum+v.stock,0)]].map(([label,value])=>h("div",[h("small",String(label)),h("strong",String(value))]))),
           h(
             "p",
             { class: "tools-note" },
@@ -609,7 +468,7 @@ export function useStaffShopping(
               h("article", { class: "card tools-panel", key: item.id }, [
                 h("div", { class: "tools-panel-heading" }, [
                   h("h2", `#${item.orderId.slice(0, 8).toUpperCase()}`),
-                  h("span", { class: "tools-pill" }, returnLabel(item.status)),
+                  h("span", { class: `tools-pill return-status-${item.status}` }, returnLabel(item.status)),
                 ]),
                 h("p", [
                   h("strong", item.receipt.recipient?.name ?? "Customer"),

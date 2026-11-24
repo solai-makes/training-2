@@ -1,6 +1,6 @@
-import { t } from "../../../packages/ui/src/language.ts";
 import type { Order } from "../../../packages/ui/src/storefront.ts";
 import { money } from "../../../packages/ui/src/storefront.ts";
+import { t } from "../../../packages/ui/src/language.ts";
 export function showDemoPayment(order: Order): Promise<void> {
   return new Promise((resolve, reject) => {
     const previous = document.activeElement as HTMLElement | null;
@@ -21,7 +21,7 @@ export function showDemoPayment(order: Order): Promise<void> {
         : reject(
             new Error(
               t(
-                "Demo payment cancelled. Resume or cancel the saved order from Your orders.",
+                "Payment cancelled. Resume or cancel the saved order from Your orders.",
               ),
             ),
           );
@@ -46,7 +46,7 @@ export function showDemoPayment(order: Order): Promise<void> {
             (order.gateway?.currency === "INR" ? 100 : 1),
           order.gateway?.currency,
         ),
-        "demo-total",
+        "total",
       ),
     );
     if (order.gateway?.provider === "demo_card") {

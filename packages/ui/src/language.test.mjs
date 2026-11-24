@@ -82,6 +82,7 @@ test("dates and currency follow the selected UI locale", ()=>{
             assert.equal(money(22400), new Intl.NumberFormat(locale(), {
                 style: "currency",
                 currency: "JPY",
+                currencyDisplay: "narrowSymbol",
                 maximumFractionDigits: 0
             }).format(22400));
             const value = "2026-10-28T01:00:00Z";

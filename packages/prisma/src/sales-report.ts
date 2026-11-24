@@ -1,3 +1,4 @@
+import {reportRange} from "../../api-contracts/src/report-range.ts";
 import { pricedProduct } from "../../api-contracts/src/scheduled-price.ts";
 import { db } from "./index.ts";
 
@@ -13,18 +14,16 @@ type Sale = {
     lineTotal: number;
   }>;
 };
-export async function salesReport(days: number) {
+export async function salesReport(days: number, custom?:{from:string;to:string}) {
   return db.$transaction(
     async (tx) => {
-      const [movement] = await tx.$queryRaw<
-        Array<{ incoming: bigint; outgoing: bigint }>
-      >`SELECT COALESCE(sum(GREATEST(delta,0)),0) AS incoming,COALESCE(sum(GREATEST(-delta,0)),0) AS outgoing FROM store_inventory_events WHERE created_at>=current_date-(${days}::int-1)`;
-      const [clock] = await tx.$queryRaw<
-        Array<{ today: string }>
-      >`SELECT to_char(current_date,'YYYY-MM-DD') AS today`;
+      const [clock] = await tx.$queryRaw<Array<{today:string}>>`SELECT to_char(current_date,'YYYY-MM-DD') AS today`;
+      const range=reportRange(custom??{days},clock.today);
+      days=range.days;
+      const [movement]=await tx.$queryRaw<Array<{incoming:bigint;outgoing:bigint}>>`SELECT COALESCE(sum(GREATEST(delta,0)),0) AS incoming,COALESCE(sum(GREATEST(-delta,0)),0) AS outgoing FROM store_inventory_events WHERE created_at>=${range.from}::date AND created_at<${range.to}::date+interval '1 day'`;
       const rows = await tx.$queryRaw<
         Array<{ day: string; payload: any }>
-      >`SELECT to_char(COALESCE((d.payload->>'confirmedAt')::timestamptz,o.created_at),'YYYY-MM-DD') AS day,d.payload FROM orders o JOIN store_order_details d ON d.order_id=o.id WHERE o.status='confirmed' AND COALESCE((d.payload->>'confirmedAt')::timestamptz,o.created_at)>=current_date-(${days * 2}::int-1) AND d.payload->>'confirmedAt' IS NOT NULL`;
+      >`SELECT to_char(COALESCE((d.payload->>'confirmedAt')::timestamptz,o.created_at),'YYYY-MM-DD') AS day,d.payload FROM orders o JOIN store_order_details d ON d.order_id=o.id WHERE o.status='confirmed' AND COALESCE((d.payload->>'confirmedAt')::timestamptz,o.created_at)>=${range.previousFrom}::date AND COALESCE((d.payload->>'confirmedAt')::timestamptz,o.created_at)<${range.to}::date+interval '1 day' AND d.payload->>'confirmedAt' IS NOT NULL`;
       const rawProducts = await tx.$queryRaw<
         Array<{
           id: string;
@@ -35,8 +34,7 @@ export async function salesReport(days: number) {
         }>
       >`SELECT id,name,description,stock,price FROM products ORDER BY name`;
       const products = rawProducts.map((p) => pricedProduct(p));
-      const currentStart = new Date(`${clock.today}T00:00:00Z`);
-      currentStart.setUTCDate(currentStart.getUTCDate() - days + 1);
+      const currentStart = new Date(`${range.from}T00:00:00Z`);
       const from = currentStart.toISOString().slice(0, 10);
       const sales: Sale[] = rows.map((r) => ({
         day: r.day,
@@ -81,7 +79,7 @@ export async function salesReport(days: number) {
         stockOutgoing: Number(movement.outgoing),
         days,
         from,
-        to: clock.today,
+        to: range.to,
         generatedAt: new Date().toISOString(),
         revenue,
         previousRevenue,

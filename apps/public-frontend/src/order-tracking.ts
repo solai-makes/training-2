@@ -78,7 +78,7 @@ export function orderTrackingPage(order: Order | null, actions: Actions) {
                   h(
                     "span",
                     { class: "delivery-mode" },
-                    "AUTOMATIC DEMO DELIVERY",
+                    "DELIVERY PROGRESS",
                   ),
                   h(
                     "h2",
@@ -97,9 +97,10 @@ export function orderTrackingPage(order: Order | null, actions: Actions) {
                       : tracking?.nextUpdateAt
                         ? `Next milestone: ${date(tracking.nextUpdateAt)}`
                         : tracking?.stage === "delivered"
-                          ? "Your demo delivery timeline is complete."
-                          : "Tracking is unavailable for this earlier order.",
+                          ? "Your delivery is complete."
+                          : "Waiting for an available delivery partner.",
                   ),
+                  h("div",{class:"delivery-person-card"},[h("small","Delivery person"),h("strong",order.receipt?.deliveryPerson?.name??"Awaiting assignment"),order.receipt?.deliveryPerson?.sample?h("small","Training courier · simulated delivery"):null]),
                   h("div", { class: "delivery-identifiers" }, [
                     h("div", [
                       h("small", "ORDER NUMBER"),
@@ -123,7 +124,7 @@ export function orderTrackingPage(order: Order | null, actions: Actions) {
                       ? date(tracking.expectedDeliveryAt)
                       : "After order confirmation",
                   ),
-                  h("span", "24 hours after confirmation"),
+                  h("span", "Target arrival · within 15 hours of confirmation"),
                 ]),
               ]),
               order.status === "confirmed" && tracking
@@ -139,7 +140,7 @@ export function orderTrackingPage(order: Order | null, actions: Actions) {
                         h(
                           "span",
                           { class: "delivery-live" },
-                          "● Updates automatically",
+                          "● Automatically updated",
                         ),
                       ]),
                       h(
@@ -152,7 +153,7 @@ export function orderTrackingPage(order: Order | null, actions: Actions) {
                           const due = order.receipt?.confirmedAt
                             ? new Date(
                                 Date.parse(order.receipt.confirmedAt) +
-                                  [0, 3600000, 18000000, 86400000][index],
+                                  [0, 3600000, 18000000, 54000000][index],
                               ).toISOString()
                             : null;
                           return h(
@@ -185,7 +186,7 @@ export function orderTrackingPage(order: Order | null, actions: Actions) {
                                     "Order confirmed",
                                     "+1 hour",
                                     "+5 hours",
-                                    "+24 hours",
+                                    "+15 hours",
                                   ][index],
                                 ),
                                 h(
@@ -205,7 +206,7 @@ export function orderTrackingPage(order: Order | null, actions: Actions) {
                       h(
                         "p",
                         { class: "delivery-disclosure" },
-                        "This training store simulates delivery milestones from the saved confirmation time. No courier is connected. Timings continue correctly after a page refresh or server restart.",
+                        "Delivery progress is simulated: shipped after 1 hour, out for delivery after 5 hours, delivered after 15 hours. Assignment requires an available on-duty partner covering your city. No live courier GPS is connected.",
                       ),
                     ],
                   )

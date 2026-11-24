@@ -1,3 +1,5 @@
+import {saveStaffProduct,deleteStaffProduct,productDto as dto} from './product-service.ts';
+import {graphqlHandler} from './graphql.ts';
 import { roleFor, demand } from "../../../packages/prisma/src/store-growth.ts";
 import { staffPermission } from "../../../packages/api-contracts/src/store-growth.ts";
 import { StoreError } from "../../../packages/prisma/src/store.ts";
@@ -57,6 +59,8 @@ app.use("*", async (c, next) => {
   await next();
 });
 
+app.use("/graphql",bodyLimit({maxSize:1250000}));
+app.post("/graphql",graphqlHandler);
 app.get("/health", (c) => c.json({ status: "ok", service: "private-api" }));
 
 app.post("/auth/login", async (c) => {
@@ -173,146 +177,9 @@ app.get("/product-images/:id/:hash", async (c) => {
 app.use("/products/*", requireAdmin);
 app.route("/store", storeRoutes);
 
-function dto(product: {
-  id: string;
-  code: string;
-  name: string;
-  description: string;
-  price: number;
-  stock: number;
-  created_at: Date;
-  updated_at: Date;
-}) {
-  return {
-    ...productDetails(product),
-    id: product.id,
-    code: product.code,
-    name: product.name,
-    description: product.description,
-    price: pricedProduct(product).price,
-    stock: product.stock,
-    createdAt: product.created_at.toISOString(),
-    updatedAt: product.updated_at.toISOString(),
-  };
-}
-
-app.openapi(createProductRoute, async (c) => {
-  const input = c.req.valid("json");
-  if (input.imageData) { try { decodeProductImage(input.imageData); } catch (failure) { return error(c,400,"INVALID_IMAGE",(failure as Error).message); } }
-
-  const product = await db.$transaction(async (tx) => {
-    const sequenceResult = await tx.$queryRaw<Array<{ next_number: bigint }>>`
-      SELECT nextval('product_code_seq') AS next_number
-    `;
-
-    const nextNumber = sequenceResult[0]?.next_number;
-
-    if (nextNumber === undefined) {
-      throw new Error("PRODUCT_CODE_SEQUENCE_UNAVAILABLE");
-    }
-
-    const code = `A-${nextNumber.toString().padStart(2, "0")}`;
-
-    const created = await tx.products.create({
-      data: {
-        code,
-        name: input.name,
-        ...prepareProduct(input),
-        stock: input.stock,
-        product_number: nextNumber,
-      },
-    });
-    if (created.stock > 0)
-      await tx.$executeRaw`INSERT INTO store_inventory_events(product_id,product_code,product_name,delta,stock_after,reason,actor_id) VALUES(${created.id}::uuid,${created.code},${created.name},${created.stock},${created.stock},'Initial product stock',${c.get("adminSub")})`;
-    await saveProductImage(tx,created.id,input.imageData);
-    return created;
-  });
-
-  return c.json(Product.parse((await withProductImages([dto(product)]))[0]), 201);
-});
-
-app.openapi(updateProductRoute, async (c) => {
-  const { id } = c.req.valid("param");
-  const input = c.req.valid("json");
-  if (input.imageData) { try { decodeProductImage(input.imageData); } catch (failure) { return error(c,400,"INVALID_IMAGE",(failure as Error).message); } }
-
-  const existing = await db.products.findUnique({
-    where: { id },
-  });
-
-  if (!existing) return error(c, 404, "NOT_FOUND", "Product not found.");
-
-  const product = await db.$transaction(async (tx) => {
-    const rows = await tx.$queryRaw<
-      Array<{ updated_at: Date; stock: number }>
-    >`SELECT updated_at, stock FROM products WHERE id=${id}::uuid FOR UPDATE`;
-    if (!rows[0]) return null;
-    if (
-      input.expectedUpdatedAt &&
-      rows[0].updated_at.getTime() !==
-        new Date(input.expectedUpdatedAt).getTime()
-    )
-      return false;
-    const saved = await tx.products.update({
-      where: { id },
-      data: {
-        name: input.name,
-        ...prepareProduct(input),
-        stock: input.stock,
-        updated_at: new Date(),
-      },
-    });
-    const delta = input.stock - rows[0].stock;
-    if (delta)
-      await tx.$executeRaw`INSERT INTO store_inventory_events(product_id,product_code,product_name,delta,stock_after,reason,actor_id) VALUES(${id}::uuid,${saved.code},${saved.name},${delta},${saved.stock},'Product edit','staff')`;
-    await saveProductImage(tx,saved.id,input.imageData);
-    return saved;
-  });
-  if (product === null) return error(c, 404, "NOT_FOUND", "Product not found.");
-  if (product === false)
-    return error(
-      c,
-      409,
-      "CONFLICT",
-      "This product changed while you were editing. Close this dialog, refresh, and try again.",
-    );
-
-  return c.json(Product.parse((await withProductImages([dto(product)]))[0]), 200);
-});
-
-app.openapi(deleteProductRoute, async (c) => {
-  const { id } = c.req.valid("param");
-
-  const existing = await db.products.findUnique({
-    where: { id },
-  });
-
-  if (!existing) return error(c, 404, "NOT_FOUND", "Product not found.");
-
-  try {
-    await db.products.delete({
-      where: { id },
-    });
-  } catch (failure) {
-    if (
-      failure &&
-      typeof failure === "object" &&
-      "code" in failure &&
-      failure.code === "P2003"
-    ) {
-      return error(
-        c,
-        409,
-        "CONFLICT",
-        "This product is used by an order or has variants. Remove unused variants first.",
-      );
-    }
-
-    throw failure;
-  }
-
-  return c.body(null, 204);
-});
+app.openapi(createProductRoute,async c=>c.json(await saveStaffProduct(null,c.req.valid('json'),c.get('adminSub')),201));
+app.openapi(updateProductRoute,async c=>c.json(await saveStaffProduct(c.req.valid('param').id,c.req.valid('json'),c.get('adminSub')),200));
+app.openapi(deleteProductRoute,async c=>{await deleteStaffProduct(c.req.valid('param').id);return c.body(null,204);});
 
 app.openapi(listProductsRoute, async (c) => {
   const { page, pageSize } = c.req.valid("query");

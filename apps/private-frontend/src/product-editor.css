@@ -44,7 +44,7 @@
   scrollbar-gutter: stable;
 }
 .editor-section {
-  border-top: 1px solid #e2e9e1;
+  border-top: 1px solid #e0e4ea;
   padding-top: 24px;
   margin-top: 22px;
 }
@@ -63,8 +63,8 @@
   width: 30px;
   height: 30px;
   border-radius: 10px;
-  background: #edf3e9;
-  color: #497440;
+  background: #e9edf3;
+  color: #405774;
   font-size: 11px;
   font-weight: 700;
   flex-shrink: 0;
@@ -75,7 +75,7 @@
 }
 .editor-section-heading p {
   margin: 0;
-  color: #7d8c7c;
+  color: #6b819d;
   font-size: 12px;
   line-height: 1.6;
 }
@@ -96,7 +96,7 @@
   min-width: 0;
   width: 100%;
   border-radius: 11px;
-  border: 1px solid #d6e1d2;
+  border: 1px solid #d2d9e1;
   padding: 13px 14px;
   font-size: 16px;
   background: #fff;
@@ -120,32 +120,32 @@
   margin: 10px 0 0;
   font-size: 12px;
   line-height: 1.8;
-  color: #7d8c7c;
+  color: #6b819d;
 }
 .editor-price-preview {
   display: grid;
   align-content: center;
   gap: 10px;
   padding: 20px;
-  background: linear-gradient(130deg, #edf7ed, #f6faf1);
-  border: 1px solid #d2e3cc;
+  background: linear-gradient(130deg, #edf1f7, #f1f5fa);
+  border: 1px solid #ccd6e3;
   border-radius: 16px;
 }
 .editor-price-preview > span {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.6px;
-  color: #64815b;
+  color: #586b84;
 }
 .editor-price-preview strong {
   font-size: 30px;
-  color: #295737;
+  color: #21272e;
   overflow-wrap: anywhere;
 }
 .editor-price-preview small {
   font-size: 11px;
   line-height: 1.6;
-  color: #60815a;
+  color: #586b83;
 }
 .editor-sale-toggle {
   display: flex;
@@ -154,8 +154,8 @@
   gap: 20px;
   cursor: pointer;
   padding: 18px;
-  background: #f7f9f3;
-  border: 1px solid #e2e9dc;
+  background: #f3f6f9;
+  border: 1px solid #dce2e9;
   border-radius: 14px;
 }
 .editor-sale-toggle > span {
@@ -167,7 +167,7 @@
 }
 .editor-sale-toggle small {
   font-size: 12px;
-  color: #788875;
+  color: #657b98;
   line-height: 1.6;
 }
 .editor-switch {
@@ -177,7 +177,7 @@
   height: 26px;
   border: 0;
   border-radius: 30px;
-  background: #c5d0c0;
+  background: #bdc7d3;
   cursor: pointer;
   flex-shrink: 0;
   margin: 0;
@@ -192,11 +192,11 @@
   height: 20px;
   border-radius: 50%;
   background: white;
-  box-shadow: 0 1px 4px #17352130;
+  box-shadow: 0 1px 4px #13171c30;
   transition: transform 0.2s;
 }
 .editor-switch:checked {
-  background: #397b48;
+  background: #39567b;
 }
 .editor-switch:checked::after {
   transform: translateX(18px);
@@ -215,7 +215,7 @@
   gap: 12px;
   padding: 20px 32px;
   margin: 0;
-  border-top: 1px solid #e2e9e1;
+  border-top: 1px solid #e0e4ea;
   background: #fff;
 }
 .editor-footer-copy {
@@ -223,7 +223,7 @@
   max-width: 230px;
   font-size: 11px;
   line-height: 1.7;
-  color: #7b8b77;
+  color: #687e9a;
   margin-right: auto;
 }
 .staff-orders-table {
@@ -261,8 +261,8 @@
   display: inline-block;
   padding: 7px 11px;
   border-radius: 20px;
-  background: #e9f3e5;
-  color: #49743c;
+  background: #e5ebf3;
+  color: #3c5474;
   font-size: 12px;
 }
 .staff-delivery-cell small {
@@ -277,13 +277,13 @@
 }
 html[data-theme="dark"]
   :is(.editor-price-preview, .editor-sale-toggle, .editor-footer) {
-  background: #21382b;
-  border-color: #40553e;
+  background: #181b1f;
+  border-color: #3b4858;
 }
 html[data-theme="dark"] .editor-body .field :is(input, select, textarea) {
-  background: #20352c;
-  color: #e4eee8;
-  border-color: #51685c;
+  background: #171a1d;
+  color: #e4e8ee;
+  border-color: #4a5a6f;
 }
 html[data-theme="dark"]
   :is(
@@ -294,10 +294,10 @@ html[data-theme="dark"]
     .editor-sale-toggle small,
     .editor-footer-copy
   ) {
-  color: #b7cbb4;
+  color: #b3becc;
 }
 html[data-theme="dark"] .editor-price-preview strong {
-  color: #a7e7af;
+  color: #a7c3e7;
 }
 @media (max-width: 600px) {
   .product-editor-dialog {
@@ -355,10 +355,10 @@ html[data-theme="dark"] .editor-price-preview strong {
   }
 }
 html[data-theme="dark"] .editor-body .field > span {
-  color: #bfd1bd;
+  color: #bcc6d2;
 }
 html[data-theme="dark"] .editor-section {
-  border-color: #40553e;
+  border-color: #3b4858;
 }
 
 .product-editor-dialog .editor-footer { flex-wrap: wrap; }

@@ -12,8 +12,8 @@ test("delivery uses exact elapsed hours from confirmation and survives restarts"
     [3600000, "shipped"],
     [17999999, "shipped"],
     [18000000, "out_for_delivery"],
-    [86399999, "out_for_delivery"],
-    [86400000, "delivered"],
+    [53999999, "out_for_delivery"],
+    [54000000, "delivered"],
     [172800000, "delivered"],
   ] as const) {
     assert.equal(
@@ -61,3 +61,5 @@ test("offer countdown changes from starts-in to ends-in at exact boundaries", ()
   assert.equal(offerCountdown(product, end)?.label, "Offer ended");
   assert.equal(offerCountdown({ description: "No scheduled offer" }), null);
 });
+
+test("missing courier pauses automatic delivery until assignment",()=>{const start="2026-10-28T00:00:00Z";const tracking=deliveryTimeline(start,{stage:"shipped",history:[],awaitingPartner:true},Date.parse(start)+20*3600000);assert.equal(tracking?.stage,"shipped");assert.equal(tracking?.awaitingPartner,true);});

@@ -1,3 +1,7 @@
+import {profitRoutes} from "./profit-routes.ts";
+import {deliveryPeople,addDeliveryPerson,assignDeliveryPerson,completeFleetDelivery,updateDeliveryProfile,updateDispatchSettings,suggestedDeliveryPerson,dispatchFleetDelivery,cancelFleetDispatch} from "../../../packages/prisma/src/delivery-fleet.ts";
+import {getOrder} from "../../../packages/prisma/src/store.ts";
+import {restockDemand} from "../../../packages/prisma/src/restock.ts";
 import { growthRoutes } from "./growth-routes.ts";
 import { roleFor, demand } from "../../../packages/prisma/src/store-growth.ts";
 import { staffPermission, type Role } from "../../../packages/api-contracts/src/store-growth.ts";
@@ -52,6 +56,8 @@ storeRoutes.use("*", async (c, next) => {
 });
 storeRoutes.use("/growth/*",bodyLimit({maxSize:32000}));
 storeRoutes.route("/growth",growthRoutes);
+storeRoutes.use("/profit/*",bodyLimit({maxSize:16000}));
+storeRoutes.route("/profit",profitRoutes);
 storeRoutes.post("/inventory/:id/adjust", async (c) => {
   const id = z.uuid().safeParse(c.req.param("id"));
   const input = z
@@ -126,13 +132,12 @@ storeRoutes.post("/orders/:id/tracking", async (c) => {
     .safeParse(await c.req.json().catch(() => null));
   if (!id.success || !input.success)
     throw new StoreError(400, "INVALID_INPUT", "Choose a valid delivery step.");
-  return c.json(await updateTracking(id.data, input.data.stage));
+  if(input.data.stage==='out_for_delivery'){await dispatchFleetDelivery(id.data);return c.json(await getOrder(id.data,null));}if(input.data.stage==='delivered'){await completeFleetDelivery(id.data);return c.json(await getOrder(id.data,null));}return c.json(await updateTracking(id.data, input.data.stage));
 });
-storeRoutes.get("/analytics", async (c) => {
-  const days = Number(c.req.query("days") ?? 7);
-  if (![7, 30].includes(days))
-    throw new StoreError(400, "INVALID_INPUT", "Choose 7 or 30 days.");
-  return c.json(await salesReport(days));
+storeRoutes.get('/analytics',async c=>{
+ const from=c.req.query('from'),to=c.req.query('to'),days=Number(c.req.query('days')??7);
+ if((from===undefined)!==(to===undefined)||(!from&&!to&&![7,15,30].includes(days)))throw new StoreError(400,'INVALID_INPUT','Choose 7, 15, 30 days or custom dates.');
+ try{return c.json(await salesReport(days,from!==undefined&&to!==undefined?{from,to}:undefined));}catch(error){if(error instanceof RangeError)throw new StoreError(400,'INVALID_INPUT',error.message);throw error;}
 });
 storeRoutes.get("/overview", async (c) => c.json(await overview()));
 storeRoutes.get("/orders", async (c) => {
@@ -144,7 +149,7 @@ storeRoutes.get("/orders", async (c) => {
     .safeParse(c.req.query());
   if (!query.success)
     throw new StoreError(400, "INVALID_INPUT", "Invalid pagination.");
-  return c.json(await listOrders(null, query.data.page, query.data.pageSize));
+  return c.json(await listOrders(null, query.data.page, query.data.pageSize,(c.req.query("search")??"").slice(0,120)));
 });
 
 const recordId = (value: string) => {
@@ -234,3 +239,21 @@ storeRoutes.onError((failure, c) => {
     500,
   );
 });
+
+storeRoutes.get("/restock",async c=>c.json({items:await restockDemand()}));
+
+storeRoutes.get('/orders/delivery-people',async c=>c.json({items:await deliveryPeople()}));
+storeRoutes.post('/orders/delivery-people',async c=>{const input=z.object({name:z.string().trim().min(1).max(100)}).strict().safeParse(await c.req.json().catch(()=>null));if(!input.success)throw new StoreError(400,'INVALID_INPUT','Enter a delivery person name.');return c.json({items:await addDeliveryPerson(input.data.name)},201);});
+storeRoutes.get('/orders/:id/delivery',async c=>{const id=z.uuid().safeParse(c.req.param('id'));if(!id.success)throw new StoreError(400,'INVALID_INPUT','Invalid order.');return c.json(await getOrder(id.data,null));});
+storeRoutes.post('/orders/:id/delivery-person',async c=>{const id=z.uuid().safeParse(c.req.param('id')),input=z.object({personId:z.uuid()}).strict().safeParse(await c.req.json().catch(()=>null));if(!id.success||!input.success)throw new StoreError(400,'INVALID_INPUT','Choose an order and delivery person.');await assignDeliveryPerson(id.data,input.data.personId);return c.json(await getOrder(id.data,null));});
+
+storeRoutes.post('/orders/:id/delivery-complete',async c=>{const id=z.uuid().safeParse(c.req.param('id'));if(!id.success)throw new StoreError(400,'INVALID_INPUT','Invalid order.');await completeFleetDelivery(id.data);return c.json(await getOrder(id.data,null));});
+
+storeRoutes.post('/orders/delivery-people/:id/profile',async c=>{const id=z.uuid().safeParse(c.req.param('id')),input=z.object({experienceYears:z.number().int().min(0).max(60).nullable(),rating:z.number().int().min(1).max(5).nullable()}).strict().safeParse(await c.req.json().catch(()=>null));if(!id.success||!input.success)throw new StoreError(400,'INVALID_PROFILE','Use 0–60 years and a rating from 1 to 5.');await updateDeliveryProfile(id.data,input.data.experienceYears,input.data.rating);return c.json({ok:true});});
+
+storeRoutes.post('/orders/delivery-people/:id/dispatch',async c=>{const id=z.uuid().safeParse(c.req.param('id')),input=z.object({onDuty:z.boolean(),zones:z.array(z.string().trim().min(1).max(60)).max(20)}).strict().safeParse(await c.req.json().catch(()=>null));if(!id.success||!input.success)throw new StoreError(400,'INVALID_ZONES','Enter up to 20 delivery cities.');await updateDispatchSettings(id.data,input.data.onDuty,input.data.zones);return c.json({ok:true});});
+storeRoutes.post('/orders/:id/assign-suggested',async c=>{const id=z.uuid().safeParse(c.req.param('id'));if(!id.success)throw new StoreError(400,'INVALID_ORDER','Invalid order.');const person=await suggestedDeliveryPerson(id.data);await assignDeliveryPerson(id.data,person.id);return c.json(await getOrder(id.data,null));});
+
+storeRoutes.post('/orders/:id/dispatch',async c=>{const id=z.uuid().safeParse(c.req.param('id'));if(!id.success)throw new StoreError(400,'INVALID_ORDER','Invalid order.');await dispatchFleetDelivery(id.data);return c.json(await getOrder(id.data,null));});
+
+storeRoutes.post('/orders/:id/return-to-store',async c=>{const id=z.uuid().safeParse(c.req.param('id'));if(!id.success)throw new StoreError(400,'INVALID_ORDER','Invalid order.');await cancelFleetDispatch(id.data);return c.json(await getOrder(id.data,null));});

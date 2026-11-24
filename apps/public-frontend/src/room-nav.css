@@ -1,0 +1,4 @@
+.shopping-tools-nav .room-nav{position:relative;overflow:visible}
+.shopping-tools-nav .room-nav:after{content:"";position:absolute;left:15%;right:15%;bottom:3px;height:3px;border-radius:5px;background:linear-gradient(90deg,#75aaff,#75aaff,#75aaff);transform:scaleX(.55);opacity:.8;transition:transform .22s ease,opacity .22s ease,box-shadow .22s ease;transform-origin:center}
+.shopping-tools-nav .room-nav:hover:after,.shopping-tools-nav .room-nav:focus-visible:after,.shopping-tools-nav .room-nav-active:after{transform:scaleX(1);opacity:1;box-shadow:0 2px 7px #e2b14945}
+@media(prefers-reduced-motion:reduce){.shopping-tools-nav .room-nav:after{transition:none}}

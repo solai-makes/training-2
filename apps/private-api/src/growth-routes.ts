@@ -20,6 +20,7 @@ import {
 } from "../../../packages/prisma/src/store-growth.ts";
 import { StoreError } from "../../../packages/prisma/src/store.ts";
 import { db } from "../../../packages/prisma/src/index.ts";
+import { activeProductDetails } from "../../../packages/api-contracts/src/scheduled-price.ts";
 export const growthRoutes = new Hono<{
   Variables: { actor: string; role: Role };
 }>();
